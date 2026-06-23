@@ -22,6 +22,7 @@ import * as LandmarkIcon from "readium-desktop/renderer/assets/icons/landmark-ic
 import * as TargetIcon from "readium-desktop/renderer/assets/icons/target-icon.svg";
 import * as SearchIcon from "readium-desktop/renderer/assets/icons/search-icon.svg";
 import * as AnnotationIcon from "readium-desktop/renderer/assets/icons/annotations-icon.svg";
+import * as GridIcon from "readium-desktop/renderer/assets/icons/grid-icon.svg";
 import * as DockLeftIcon from "readium-desktop/renderer/assets/icons/dockleft-icon.svg";
 import * as DockRightIcon from "readium-desktop/renderer/assets/icons/dockright-icon.svg";
 import * as DockModalIcon from "readium-desktop/renderer/assets/icons/dockmodal-icon.svg";
@@ -51,6 +52,7 @@ import { IReaderRootState } from "readium-desktop/common/redux/states/renderer/r
 
 import { shell } from "electron";
 import { AnnotationList } from "./AnnotationList";
+import { ImageGalleryList } from "./ImageGalleryList";
 import { BookmarkList } from "./BookmarkList";
 import { GoToPageSection } from "./GoToPageSection";
 import { createOrGetPdfEventBus } from "../../pdf/driver";
@@ -432,6 +434,9 @@ const TabTitle = ({ value }: { value: string }) => {
         case "tab-annotation":
             title = __("reader.marks.annotations");
             break;
+        case "tab-aigallery":
+            title = __("reader.marks.images");
+            break;
     }
     return (
         <div className={stylesSettings.settings_tab_title}>
@@ -585,6 +590,14 @@ export const ReaderMenu: React.FC<IBaseProps> = (props) => {
             name: __("reader.marks.annotations"),
             disabled: false,
             svg: AnnotationIcon,
+            show: isPdf || isEpub,
+        },
+        {
+            id: 6,
+            value: "tab-aigallery",
+            name: __("reader.marks.images"),
+            disabled: false,
+            svg: GridIcon,
             show: isPdf || isEpub,
         },
     ];
@@ -795,6 +808,15 @@ export const ReaderMenu: React.FC<IBaseProps> = (props) => {
                                 START_PAGE={START_PAGE}
                                 selectionIsSet={selectionIsSet}
                                 MAX_MATCHES_PER_PAGE={MAX_MATCHES_PER_PAGE}
+                            />
+                        </div>
+                    </Tabs.Content>
+
+                    <Tabs.Content value="tab-aigallery" tabIndex={-1} id={"reader-menu-tab-aigallery"} className="R2_CSS_CLASS__FORCE_NO_FOCUS_OUTLINE">
+                        <div className={classNames(stylesSettings.settings_tab, stylesAnnotations.annotations_tab)}>
+                            <ImageGalleryList
+                                goToLocator={goToLocator}
+                                goToPdfAnnotation={goToPdfAnnotation}
                             />
                         </div>
                     </Tabs.Content>

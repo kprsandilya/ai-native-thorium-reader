@@ -30,6 +30,7 @@ import { checkIfIsAllSelectorsNoteAreGeneratedForReadiumAnnotation, readiumAnnot
 import { clone, equals } from "ramda";
 import { convertSelectorTargetToLocatorExtended } from "readium-desktop/common/readium/annotation/converter";
 import { getResourceCache } from "readium-desktop/common/redux/sagas/resourceCache";
+import { uuidv4 } from "readium-desktop/utils/uuid";
 
 // Logger
 const debug = debug_("readium-desktop:renderer:reader:redux:sagas:annotation");
@@ -251,7 +252,7 @@ function* noteRemove(action: readerActions.note.remove.TAction) {
     yield* putTyped(readerLocalActionHighlights.handler.pop.build([{ uuid: note.uuid }]));
 }
 
-function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, comment: string, drawType: TDrawType, tags: string[]) {
+function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage = false) {
 
     // clean __selection global variable state
     __selectionInfoGlobal.locatorExtended = undefined;
@@ -262,7 +263,11 @@ function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, 
 
     const noteTotalCount = yield* selectTyped((state: IReaderRootState) => state.reader.noteTotalCount.state);
     const { publicationIdentifier } = yield* selectTyped((state: IReaderRootState) => state.reader.info);
-    yield* putTyped(readerActions.note.addUpdate.build(publicationIdentifier, {
+
+    // Generate the uuid up front so we can reference this note when requesting
+    // an AI-generated image for it (see below).
+    const newNote: INoteState = {
+        uuid: uuidv4(),
         color,
         textualValue: comment,
         index: noteTotalCount + 1,
@@ -272,9 +277,18 @@ function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, 
         creator: clone(creator),
         created: (new Date()).getTime(),
         group: "annotation",
-    }));
+    };
+    yield* putTyped(readerActions.note.addUpdate.build(publicationIdentifier, newNote));
 
     yield* putTyped(readerActions.bookmarkTotalCount.build(noteTotalCount + 1));
+
+    if (generateImage) {
+        const prompt = locatorExtended.selectionInfo?.cleanText || "";
+        if (prompt) {
+            debug(`Requesting AI image generation for note ${newNote.uuid}`);
+            yield* putTyped(readerActions.aiImage.request.build(publicationIdentifier, clone(newNote), prompt));
+        }
+    }
 
     // sure! close the popover
     yield* putTyped(readerLocalActionAnnotations.enableMode.build(false, undefined, undefined));
@@ -295,28 +309,44 @@ function* newLocatorEditAndSaveTheNote(locatorExtended: MiniLocatorExtended, fro
     yield* putTyped(readerLocalActionAnnotations.enableMode.build(true, locatorExtended, fromKeyboard));
 
     // wait the action of the annotation popover, the user select the text, click on "take the note" button and then edit his note with the popover.
-    // 2 choices: cancel (annotationModeEnabled = false) or takeNote with color and comment
-    const { cancelAction, noteTakenAction } = yield* raceTyped({
-        cancelAction: takeTyped(readerLocalActionAnnotations.enableMode.ID),
-        noteTakenAction: takeTyped(readerLocalActionAnnotations.createNote.build), // not .ID because we need Action return type
-    });
+    // 3 choices: cancel (annotationModeEnabled = false), refresh the selected text (re-point to the current selection),
+    // or takeNote with color and comment.
+    // `currentLocator` tracks the selection that will be persisted; the "refresh
+    // selected text" button updates it to the reader's live selection.
+    let currentLocator = locatorExtended;
+    let saved = false;
+    while (!saved) {
+        const { cancelAction, refreshAction, noteTakenAction } = yield* raceTyped({
+            cancelAction: takeTyped(readerLocalActionAnnotations.enableMode.ID),
+            refreshAction: takeTyped(readerLocalActionAnnotations.setLocator.build), // not .ID because we need Action return type
+            noteTakenAction: takeTyped(readerLocalActionAnnotations.createNote.build), // not .ID because we need Action return type
+        });
 
-    if (cancelAction) {
-        debug("annotation canceled and not saved [not created]");
+        if (cancelAction) {
+            debug("annotation canceled and not saved [not created]");
 
-        // __selectionInfoGlobal.locatorExtended is not yet cleaned, ready to re-trigger the note creation
-        return;
-    } else if (noteTakenAction) {
+            // __selectionInfoGlobal.locatorExtended is not yet cleaned, ready to re-trigger the note creation
+            return;
+        } else if (refreshAction) {
 
-        const { color, textualValue, drawType, tags } = noteTakenAction.payload;
-        debug(`annotation save the note with the color: ${color} , comment: ${textualValue.slice(0, 20)} , drawType: ${drawType} , tags: ${tags}`);
+            currentLocator = refreshAction.payload.locatorExtended;
+            debug(`annotation selected text refreshed [${currentLocator?.selectionInfo?.cleanText?.slice(0, 20)}]`);
+            // keep waiting for the user to save or cancel
+            continue;
+        } else if (noteTakenAction) {
+
+            const { color, textualValue, drawType, tags, generateImage } = noteTakenAction.payload;
+            debug(`annotation save the note with the color: ${color} , comment: ${textualValue.slice(0, 20)} , drawType: ${drawType} , tags: ${tags}`);
 
 
-        // get color and comment and save the note
-        yield* callTyped(createAnnotation, locatorExtended, color, textualValue, EDrawType[drawType] as TDrawType, tags);
+            // get color and comment and save the note
+            yield* callTyped(createAnnotation, currentLocator, color, textualValue, EDrawType[drawType] as TDrawType, tags, generateImage);
+            saved = true;
 
-    } else {
-        debug("ERROR: second yield RACE not worked !!?!!");
+        } else {
+            debug("ERROR: second yield RACE not worked !!?!!");
+            return;
+        }
     }
 
     if (fromKeyboard) {

@@ -35,6 +35,7 @@ import * as telemetry from "./telemetry";
 import * as lcp from "./lcp";
 import * as catalog from "./catalog";
 import * as annotation from "./note";
+import * as aiImage from "./ai/generateImage";
 import * as customization from "./customization";
 import * as lcpSharedWorkstationCleanup from "./publication/lcpSharedWorkstationCleanup";
 
@@ -139,6 +140,9 @@ export function* rootSaga() {
 
     // Annotation saga
     yield annotation.saga();
+
+    // AI image generation saga (proxies highlight text to the local Python engine)
+    yield aiImage.saga();
 
     // get/set catalog in library win
     yield catalog.saga();

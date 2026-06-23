@@ -5,12 +5,14 @@
 // that can be found in the LICENSE file exposed on Github (readium) in the project repository.
 // ==LICENSE-END==
 
+import * as aiImageModelId from "./aiImageModelId";
 import * as enableAPIAPP from "./enableAPIAPP";
 import * as lcpAutoDeleteExpiredPublications from "./lcpAutoDeleteExpiredPublications";
 import * as lcpAutoDeleteExpiredPublicationsForced from "./lcpAutoDeleteExpiredPublicationsForced";
 import * as minimizeLibraryToTray from "./minimizeLibraryToTray";
 
 export {
+    aiImageModelId,
     enableAPIAPP,
     lcpAutoDeleteExpiredPublications,
     lcpAutoDeleteExpiredPublicationsForced,

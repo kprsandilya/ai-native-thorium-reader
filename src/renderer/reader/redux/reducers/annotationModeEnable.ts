@@ -12,7 +12,7 @@ import { IAnnotationModeState } from "readium-desktop/common/redux/states/render
 
 function annotationModeEnableReducer_(
     state: IAnnotationModeState = { enable: false, locatorExtended: undefined, fromKeyboard: undefined },
-    action: readerLocalActionAnnotations.enableMode.TAction,
+    action: readerLocalActionAnnotations.enableMode.TAction | readerLocalActionAnnotations.setLocator.TAction,
 ): IAnnotationModeState {
 
     switch (action.type) {
@@ -20,6 +20,14 @@ function annotationModeEnableReducer_(
             return {
                 ...state,
                 ...action.payload,
+            };
+        case readerLocalActionAnnotations.setLocator.ID:
+            // Refreshing the selection only happens while the editor is open, so
+            // the result is always the `enable: true` variant of the union.
+            return {
+                enable: true,
+                locatorExtended: action.payload.locatorExtended,
+                fromKeyboard: state.enable ? state.fromKeyboard : false,
             };
         default:
             return state;

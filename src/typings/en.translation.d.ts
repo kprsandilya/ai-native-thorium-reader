@@ -1764,11 +1764,13 @@ declare namespace typed_i18n {
       readonly "filterOptions": string,
       readonly "none": string
     },
+    readonly "generateImage": string,
     readonly "hide": string,
     readonly "highlight": string,
     readonly "noSelectionToast": string,
     readonly "note": string,
     readonly "quickAnnotations": string,
+    readonly "refreshSelectedText": string,
     readonly "saveNote": string,
     readonly "sorting": {
       readonly "lastcreated": string,
@@ -2015,11 +2017,13 @@ declare namespace typed_i18n {
     readonly "filterOptions": string,
     readonly "none": string
   },
+  readonly "generateImage": string,
   readonly "hide": string,
   readonly "highlight": string,
   readonly "noSelectionToast": string,
   readonly "note": string,
   readonly "quickAnnotations": string,
+  readonly "refreshSelectedText": string,
   readonly "saveNote": string,
   readonly "sorting": {
     readonly "lastcreated": string,
@@ -2063,11 +2067,13 @@ declare namespace typed_i18n {
   (_: "reader.annotations.filter.filterByTag", __?: {}): string;
   (_: "reader.annotations.filter.filterOptions", __?: {}): string;
   (_: "reader.annotations.filter.none", __?: {}): string;
+  (_: "reader.annotations.generateImage", __?: {}): string;
   (_: "reader.annotations.hide", __?: {}): string;
   (_: "reader.annotations.highlight", __?: {}): string;
   (_: "reader.annotations.noSelectionToast", __?: {}): string;
   (_: "reader.annotations.note", __?: {}): string;
   (_: "reader.annotations.quickAnnotations", __?: {}): string;
+  (_: "reader.annotations.refreshSelectedText", __?: {}): string;
   (_: "reader.annotations.saveNote", __?: {}): string;
   (_: "reader.annotations.sorting", __?: {}): {
   readonly "lastcreated": string,
@@ -2552,6 +2558,15 @@ declare namespace typed_i18n {
   (_: "reader.tts.stop", __?: {}): string;
   (_: "reader.tts.voice", __?: {}): string;
   (_: "settings", __?: {}): {
+  readonly "aiImage": {
+    readonly "help": string,
+    readonly "model": {
+      readonly "fluxDevFp8": string,
+      readonly "sdTurbo": string
+    },
+    readonly "modelChoice": string,
+    readonly "title": string
+  },
   readonly "annotationCreator": {
     readonly "creator": string,
     readonly "help": string,
@@ -2905,6 +2920,21 @@ declare namespace typed_i18n {
     readonly "title": string
   }
 };
+  (_: "settings.aiImage", __?: {}): {
+  readonly "help": string,
+  readonly "model": {
+    readonly "fluxDevFp8": string,
+    readonly "sdTurbo": string
+  },
+  readonly "modelChoice": string,
+  readonly "title": string
+};
+  (_: "settings.aiImage.help", __?: {}): string;
+  (_: "settings.aiImage.model", __?: {}): { readonly "fluxDevFp8": string, readonly "sdTurbo": string };
+  (_: "settings.aiImage.model.fluxDevFp8", __?: {}): string;
+  (_: "settings.aiImage.model.sdTurbo", __?: {}): string;
+  (_: "settings.aiImage.modelChoice", __?: {}): string;
+  (_: "settings.aiImage.title", __?: {}): string;
   (_: "settings.annotationCreator", __?: {}): {
   readonly "creator": string,
   readonly "help": string,

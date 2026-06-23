@@ -12,12 +12,14 @@ import * as stylesTags from "readium-desktop/renderer/assets/styles/components/t
 import * as stylesMarkdown from "readium-desktop/renderer/assets/styles/github-markdown.scss";
 import classNames from "classnames";
 import * as React from "react";
+import { createPortal } from "react-dom";
 import FocusLock from "react-focus-lock";
 
 import SVG from "readium-desktop/renderer/common/components/SVG";
 
 import * as DeleteIcon from "readium-desktop/renderer/assets/icons/trash-icon.svg";
 import * as EditIcon from "readium-desktop/renderer/assets/icons/pen-icon.svg";
+import * as LoaderIcon from "readium-desktop/renderer/assets/icons/loader.svg";
 import * as BookOpenIcon from "readium-desktop/renderer/assets/icons/bookOpen-icon.svg";
 import * as CalendarIcon from "readium-desktop/renderer/assets/icons/calendar-icon.svg";
 import * as AvatarIcon from "readium-desktop/renderer/assets/icons/avatar-icon.svg";
@@ -89,6 +91,12 @@ export const AnnotationCard: React.FC<{ annotation: INoteState, isEdited: boolea
     const dispatch = useDispatch();
     const [__] = useTranslator();
     const pubId = useSelector((state: IReaderRootState) => state.reader.info.publicationIdentifier);
+
+    // AI-generated image state for this annotation.
+    const aiImageStatus = useSelector((state: IReaderRootState) => state.aiImage[uuid]);
+    const generatedImagePath = annotation.generatedImagePath;
+    const generatedImageUrl = generatedImagePath ? `store://${pubId}/${generatedImagePath}` : undefined;
+    const [imageOpen, setImageOpen] = React.useState(false);
     // const noteTotalCount = useSelector((state: IReaderRootState) => state.reader.noteTotalCount.state);
     const save = React.useCallback((color: IColor, comment: string, drawType: TDrawType, tags: string[]) => {
         dispatch(readerActions.note.addUpdate.build(
@@ -265,9 +273,63 @@ export const AnnotationCard: React.FC<{ annotation: INoteState, isEdited: boolea
                             </div>
                         </div>
                             : <></>}
+                        {aiImageStatus?.status === "pending" ?
+                            <div style={{ display: "flex", alignItems: "center", gap: "6px", padding: "6px 0", color: "var(--color-gray-500)" }}>
+                                <SVG ariaHidden svg={LoaderIcon} />
+                                <span>{__("reader.annotations.generateImage")}...</span>
+                            </div>
+                            : <></>}
+                        {aiImageStatus?.status === "error" ?
+                            <div style={{ padding: "6px 0", color: "var(--color-error, red)", fontSize: "12px" }}>
+                                {aiImageStatus.error || "AI image generation failed"}
+                            </div>
+                            : <></>}
+                        {generatedImageUrl ?
+                            <button
+                                type="button"
+                                title={__("reader.annotations.generateImage")}
+                                aria-label={__("reader.annotations.generateImage")}
+                                onClick={(e) => { e.preventDefault(); setImageOpen(true); }}
+                                style={{ border: "none", background: "none", padding: "6px 0", cursor: "pointer", display: "block" }}
+                            >
+                                <img
+                                    src={generatedImageUrl}
+                                    alt={selectionText || btext}
+                                    style={{ maxWidth: "100%", maxHeight: "160px", borderRadius: "4px", display: "block" }}
+                                />
+                            </button>
+                            : <></>}
                     </>
             }
         </div>
+        {imageOpen && generatedImageUrl ?
+            // Portal to <body> so the fixed overlay is sized against the viewport,
+            // not the transformed reader-menu panel (otherwise it shrinks to the panel).
+            createPortal(
+                <div
+                    onClick={() => setImageOpen(false)}
+                    role="presentation"
+                    style={{
+                        position: "fixed", inset: 0, zIndex: 2147483647,
+                        background: "rgba(0, 0, 0, 0.85)",
+                        display: "flex", alignItems: "center", justifyContent: "center",
+                        padding: "24px",
+                    }}
+                >
+                    <img
+                        src={generatedImageUrl}
+                        alt={selectionText || btext}
+                        style={{
+                            maxWidth: "100%", maxHeight: "100%",
+                            width: "auto", height: "auto",
+                            objectFit: "contain",
+                            borderRadius: "6px", boxShadow: "0 4px 24px rgba(0,0,0,0.5)",
+                        }}
+                    />
+                </div>,
+                document.body,
+            )
+            : <></>}
         <div className={stylesAnnotations.annotation_edit}>
             <div>
                 <div aria-label={__("reader.annotations.date")}>

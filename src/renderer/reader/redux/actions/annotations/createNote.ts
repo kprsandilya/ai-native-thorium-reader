@@ -13,14 +13,17 @@ export const ID = "READER_ANNOTATIONS_CREATE_NOTE";
 
 // eslint-disable-next-line @typescript-eslint/no-empty-interface
 interface IPayload extends Pick<INoteState, "color"|"textualValue"|"drawType"|"tags"> {
+    // When true, an AI image is generated from the highlighted text right after
+    // the note is created.
+    generateImage?: boolean;
 }
 
-export function build(color: IColor, comment: string, drawType: TDrawType, tags: string[]):
+export function build(color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage?: boolean):
     Action<typeof ID, IPayload> {
 
     return {
         type: ID,
-        payload: { color, textualValue: comment, drawType: EDrawType[drawType], tags },
+        payload: { color, textualValue: comment, drawType: EDrawType[drawType], tags, generateImage },
     };
 }
 build.toString = () => ID; // Redux StringableActionCreator

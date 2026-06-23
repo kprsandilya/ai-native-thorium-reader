@@ -976,11 +976,11 @@ export class ReaderHeader extends React.Component<IProps, IState> {
                                 // onInteractOutside={(e) => { e.preventDefault(); console.log("annotationPopover onInteractOutside"); }}
                                 >
                                     <AnnotationEdit
-                                        save={(color: IColor, comment: string, drawType: TDrawType, tags: string[]) => {
+                                        save={(color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage?: boolean) => {
                                             if (this.props.isPdf) {
                                                 this.props.savePdfAnnotation?.(color, comment, drawType, tags);
                                             } else {
-                                                this.props.saveAnnotation(this.props.isAnnotationModeEnabledFromKeyboard, color, comment, drawType, tags);
+                                                this.props.saveAnnotation(this.props.isAnnotationModeEnabledFromKeyboard, color, comment, drawType, tags, generateImage);
                                             }
                                         }}
                                         cancel={closeAnnotationPopover}
@@ -1645,8 +1645,8 @@ const mapDispatchToProps = (dispatch: TDispatch, _props: IBaseProps) => {
                 }, 200);
             }
         },
-        saveAnnotation: (fromKeyboard: boolean, color: IColor, comment: string, drawType: TDrawType, tags: string[]) => {
-            dispatch(readerLocalActionAnnotations.createNote.build(color, comment, drawType, tags));
+        saveAnnotation: (fromKeyboard: boolean, color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage?: boolean) => {
+            dispatch(readerLocalActionAnnotations.createNote.build(color, comment, drawType, tags, generateImage));
 
             if (fromKeyboard) {
                 setTimeout(() => {

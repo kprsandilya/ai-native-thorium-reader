@@ -23,6 +23,7 @@ import { delay as delayTyped, put as putTyped, race as raceTyped, select as sele
 
 // import { clearSessions } from "@r2-navigator-js/electron/main/sessions";
 import { clearSessions } from "readium-desktop/main/sessions";
+import { startAiEngine, stopAiEngine } from "readium-desktop/main/ai/aiEngineProcess";
 
 import { streamerActions } from "../actions";
 import {
@@ -129,6 +130,11 @@ export function* init() {
         e.sender.send("accessibility-support-changed", accessibilitySupportEnabled && screenReaderActivated);
     });
 
+    // Optionally spawn the local Python AI engine as a child process so the full
+    // stack runs as one app (opt-in via THORIUM_AI_ENGINE_AUTOSTART=1; off by
+    // default so `npm run dev:all` can keep starting it separately).
+    startAiEngine();
+
     yield call(() => app.whenReady());
 
     debug("Main app ready");
@@ -164,6 +170,8 @@ export function* init() {
         debug("#####");
         debug("will-quit");
         debug("#####");
+
+        stopAiEngine();
     });
 
     yield call(() => {

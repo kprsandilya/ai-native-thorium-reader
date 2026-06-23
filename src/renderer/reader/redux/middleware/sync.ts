@@ -55,6 +55,10 @@ const SYNCHRONIZABLE_ACTIONS: string[] = [
     readerActions.note.addUpdate.ID,
     readerActions.note.remove.ID,
 
+    // forward the AI image generation request to the main process, which proxies
+    // it to the local Python engine and writes the result to disk.
+    readerActions.aiImage.request.ID,
+
     annotationActions.importAnnotationSet.ID,
     annotationActions.importConfirmOrAbort.ID,
 

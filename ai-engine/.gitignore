@@ -1,0 +1,11 @@
+# Python virtual environment (managed by uv)
+.venv/
+
+# Byte-compiled / cache
+__pycache__/
+*.py[cod]
+*.egg-info/
+
+# Hugging Face / model caches
+.cache/
+models/

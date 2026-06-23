@@ -26,6 +26,7 @@ import * as setLocator from "./setLocator";
 import * as setConfig from "./setConfig";
 import * as allowCustom from "./allowCustom";
 import * as bookmarkTotalCount from "./bookmarkTotalCount";
+import * as aiImage from "./aiImage";
 
 export {
     openRequest,
@@ -49,4 +50,5 @@ export {
     setConfig,
     allowCustom,
     bookmarkTotalCount,
+    aiImage,
 };

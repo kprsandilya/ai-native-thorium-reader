@@ -39,6 +39,8 @@ import { availableLanguages } from "readium-desktop/common/services/translator";
 import { ComboBox, ComboBoxItem } from "readium-desktop/renderer/common/components/ComboBox";
 import { useDispatch } from "readium-desktop/renderer/common/hooks/useDispatch";
 import { authActions, catalogActions, creatorActions, customizationActions, i18nActions, noteExport, screenReaderActions, settingsActions, themeActions } from "readium-desktop/common/redux/actions";
+import { AI_IMAGE_MODEL_OPTIONS } from "readium-desktop/common/ai/aiEngine";
+import { settingsAiImageModelId } from "readium-desktop/common/redux/states/settings";
 import * as BinIcon from "readium-desktop/renderer/assets/icons/trash-icon.svg";
 import { ICommonRootState } from "readium-desktop/common/redux/states/commonRootState";
 import { TTheme } from "readium-desktop/common/redux/states/theme";
@@ -558,6 +560,47 @@ const ManageAccessToCatalogSettings = () => {
     );
 };
 
+const AiImageModelSettings = () => {
+
+    const [__] = useTranslator();
+    const locale = useSelector((state: ICommonRootState) => state.i18n.locale);
+    const isRTL = langStringIsRTL(locale);
+    const dispatch = useDispatch();
+    const aiImageModelId = useSelector((state: ILibraryRootState) =>
+        settingsAiImageModelId(state.settings));
+
+    const options = AI_IMAGE_MODEL_OPTIONS.map((option, index) => ({
+        id: index + 1,
+        value: option.id,
+        name: __(option.labelKey),
+    }));
+
+    const setModel = (selected: React.Key) => {
+        if (typeof selected !== "number") {
+            return;
+        }
+        const chosen = options.find(({ id }) => id === selected);
+        if (chosen && chosen.value !== aiImageModelId) {
+            dispatch(settingsActions.aiImageModelId.build(chosen.value));
+        }
+    };
+
+    const selectedKey = options.find(({ value }) => value === aiImageModelId)?.id;
+
+    return (
+        <section className={stylesSettings.section}>
+            <h3 dir={isRTL ? "rtl" : "ltr"}>{__("settings.aiImage.title")}</h3>
+            <ComboBox label={__("settings.aiImage.modelChoice")} items={options} selectedKey={selectedKey} onSelectionChange={setModel} svg={PaletteIcon}>
+                {item => <ComboBoxItem>{item.name}</ComboBoxItem>}
+            </ComboBox>
+            <div className={stylesSettings.session_text}>
+                <SVG ariaHidden svg={InfoIcon} />
+                <p dir={isRTL ? "rtl" : "ltr"}>{__("settings.aiImage.help")}</p>
+            </div>
+        </section>
+    );
+};
+
 const SharedComputerSettings = () => {
 
     const [__] = useTranslator();
@@ -1059,6 +1102,7 @@ export const Settings: React.FC<ISettingsProps> = () => {
                                 <LanguageSettings />
                                 <ScreenReaderSettings />
                                 {IS_WINDOWS ? <MinimizeLibraryToTraySettings /> : <></>}
+                                <AiImageModelSettings />
                                 <ConnectionSettings />
                                 <SharedComputerSettings />
                                 {/* <SaveSessionSettings /> */}

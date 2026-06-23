@@ -59,6 +59,7 @@ import { ICustomizationProfileHistory } from "readium-desktop/common/redux/state
 import { customizationPackageWelcomeScreenReducer } from "readium-desktop/common/redux/reducers/customization/welcomeScreen";
 import { ICustomizationManifest } from "readium-desktop/common/readium/customization/manifest";
 import { readerPdfConfigReducer } from "readium-desktop/common/redux/reducers/reader/pdfConfig";
+import { aiImageReducer } from "./aiImage";
 
 export const rootReducer = () => {
 
@@ -161,6 +162,7 @@ export const rootReducer = () => {
         }),
         search: searchReducer,
         annotation: annotationModeEnableReducer,
+        aiImage: aiImageReducer,
         noteTagsIndex: arrayReducer<readerActions.note.addUpdate.TAction | readerActions.note.remove.TAction, undefined, { tag: string, index: number }, { tag: string }>(
             {
                 add: [

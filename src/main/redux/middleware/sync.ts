@@ -78,12 +78,17 @@ const SYNCHRONIZABLE_ACTIONS: string[] = [
     readerActions.note.addUpdate.ID,
     readerActions.note.remove.ID,
 
+    // broadcast AI image generation status (pending/success/error) back to the
+    // reader window that requested it.
+    readerActions.aiImage.status.ID,
+
     sessionActions.save.ID,
     screenReaderActions.save.ID,
 
     creatorActions.set.ID,
 
     settingsActions.minimizeLibraryToTray.ID,
+    settingsActions.aiImageModelId.ID,
     settingsActions.lcpAutoDeleteExpiredPublications.ID,
     settingsActions.lcpAutoDeleteExpiredPublicationsForced.ID,
 

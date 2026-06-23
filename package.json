@@ -27,6 +27,11 @@
   "scripts": {
     "__postinstall": "node -e \"const path = require('path'); const fs = require('fs'); const filePath = path.join(process.cwd(), 'node_modules/ts-loader/dist/index.js'); let fileStr = fs.readFileSync(filePath, { encoding: 'utf8' }); fileStr = fileStr.replace(/, rootDir: undefined/, ''); fs.writeFileSync(filePath, fileStr, { encoding: 'utf8' });\"",
     "clean": "rimraf dist && rimraf release",
+    "ai-engine:dev": "cd ai-engine && uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload",
+    "ai-engine:download": "cd ai-engine && uv run python download.py",
+    "dev:all": "concurrently --kill-others --names \"thorium,ai-engine\" --prefix-colors \"cyan,magenta\" \"npm run start:dev\" \"npm run ai-engine:dev\"",
+    "dev:integrated": "cross-env THORIUM_AI_ENGINE_AUTOSTART=1 npm run start:dev",
+    "dev:all:quick": "concurrently --kill-others --names \"thorium,ai-engine\" --prefix-colors \"cyan,magenta\" \"npm run start:dev:quick\" \"npm run ai-engine:dev\"",
     "test": "cross-env JEST_TESTS=1 jest --config=jest.config.js --verbose --runInBand --bail=1 --no-cache \"test\"",
     "testFile": "cross-env JEST_TESTS=1 jest --config=jest.config.js --verbose --runInBand --bail=1 --no-cache ",
     "test:pdf-annotations:harness:install": "playwright install chromium",
@@ -205,6 +210,17 @@
     "asarUnpack": [
       "**/*.node",
       "**/lcp.node"
+    ],
+    "extraResources": [
+      {
+        "from": "ai-engine",
+        "to": "ai-engine",
+        "filter": [
+          "**/*",
+          "!.venv/**",
+          "!**/__pycache__/**"
+        ]
+      }
     ],
     "directories": {
       "buildResources": "resources",

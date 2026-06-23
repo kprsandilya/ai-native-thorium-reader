@@ -96,6 +96,11 @@ export interface INoteState {
     created: number;
     creator?: INoteCreator;
     group: "bookmark" | "annotation";
+    // Filename (relative to the publication storage folder) of an AI-generated
+    // image attached to this annotation. Served to the renderer via the
+    // store://<pubId>/<generatedImagePath> protocol. Persisted automatically as
+    // part of the JSON-serialized note row in SQLite.
+    generatedImagePath?: string;
     readiumAnnotation?: {
         export?: {
             selector: ISelector[];

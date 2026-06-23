@@ -9,23 +9,32 @@ import { type Reducer } from "redux";
 
 import { ISettingsState } from "readium-desktop/common/redux/states/settings";
 import { settingsActions } from "readium-desktop/common/redux/actions";
+import { DEFAULT_AI_IMAGE_MODEL_ID } from "readium-desktop/common/ai/aiEngine";
 
 const initialState: ISettingsState = {
     enableAPIAPP: false,
     minimizeLibraryToTray: false,
     lcpAutoDeleteExpiredPublications: false,
     lcpAutoDeleteExpiredPublicationsForced: false,
+    aiImageModelId: DEFAULT_AI_IMAGE_MODEL_ID,
 };
 
 function settingsReducer_(
     state: ISettingsState = initialState,
     action:
+        settingsActions.aiImageModelId.TAction |
         settingsActions.enableAPIAPP.TAction |
         settingsActions.minimizeLibraryToTray.TAction |
         settingsActions.lcpAutoDeleteExpiredPublications.TAction |
         settingsActions.lcpAutoDeleteExpiredPublicationsForced.TAction,
 ):  ISettingsState {
     switch (action.type) {
+        case settingsActions.aiImageModelId.ID:
+            return {
+                ...initialState,
+                ...state,
+                aiImageModelId: action.payload.aiImageModelId,
+            };
         case settingsActions.enableAPIAPP.ID:
             return {
                 ...initialState,

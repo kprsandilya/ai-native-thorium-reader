@@ -36,7 +36,7 @@ export const readerConfigInitialStateAnnotation: IAnnotationReaderConfigState = 
 
 export const readerConfigInitialStateReaderDockingMode: IReaderConfigSettingsMenuState = {
     readerDockingMode: "full",
-    readerMenuSection: "tab-toc",
+    readerMenuSection: "tab-annotation",
     readerSettingsSection: "tab-display",
 };
 

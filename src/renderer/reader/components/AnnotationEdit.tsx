@@ -18,6 +18,8 @@ import * as Popover from "@radix-ui/react-popover";
 import SVG from "readium-desktop/renderer/common/components/SVG";
 import * as CheckIcon from "readium-desktop/renderer/assets/icons/doubleCheck-icon.svg";
 import * as SaveIcon from "readium-desktop/renderer/assets/icons/floppydisk-icon.svg";
+import * as PaletteIcon from "readium-desktop/renderer/assets/icons/palette-icon.svg";
+import * as RefreshIcon from "readium-desktop/renderer/assets/icons/refresh-icon.svg";
 import * as HighLightIcon from "readium-desktop/renderer/assets/icons/highlight-icon.svg";
 import * as UnderLineIcon from "readium-desktop/renderer/assets/icons/underline-icon.svg";
 import * as TextStrikeThroughtIcon from "readium-desktop/renderer/assets/icons/TextStrikethrough-icon.svg";
@@ -43,11 +45,12 @@ import { MiniLocatorExtended } from "readium-desktop/common/redux/states/locator
 // @__ts-ignore TS1479
 import {subscribe} from "@github/paste-markdown";
 import { readerActions } from "readium-desktop/common/redux/actions";
+import { readerLocalActionAnnotations } from "readium-desktop/renderer/reader/redux/actions";
 
 // import { readiumCSSDefaults } from "@r2-navigator-js/electron/common/readium-css-settings";
 
 interface IProps {
-    save: (color: IColor, comment: string, drawType: TDrawType, tags: string[]) => void;
+    save: (color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage?: boolean) => void;
     cancel: () => void;
     dockedMode: boolean;
     uuid?: string;
@@ -89,6 +92,24 @@ export const AnnotationEdit: React.FC<IProps> = (props) => {
         TextOutlineIcon,
     ];
     const selectionPreview = selectionText || locatorExtended?.selectionInfo?.cleanText || "";
+
+    // Live reader selection, used by the "refresh selected text" button so the
+    // popover can re-point to a newly highlighted passage without being reopened.
+    const liveLocator = useSelector((state: IReaderRootState) => state.reader.locator);
+    const liveSelectionText = liveLocator?.selectionInfo?.cleanText || "";
+    const hasSelection = !!selectionPreview;
+    // Only meaningful when creating from a live selection (not when editing an
+    // existing note from the reader menu), and only when the current reader
+    // selection differs from what the popover is already showing.
+    const canRefreshSelection = !displayFromReaderMenu
+        && !!liveSelectionText
+        && liveSelectionText !== selectionPreview;
+
+    const refreshSelectedText = React.useCallback(() => {
+        if (liveLocator?.selectionInfo) {
+            dispatch(readerLocalActionAnnotations.setLocator.build(liveLocator));
+        }
+    }, [dispatch, liveLocator]);
 
     React.useEffect(() => {
         const textAreaElement = document.getElementById(`${uuid}_edit`);
@@ -142,6 +163,22 @@ export const AnnotationEdit: React.FC<IProps> = (props) => {
                         `${selectionPreview.slice(0, 200)}...` :
                         selectionPreview)
                     : ""}</p>
+            {displayFromReaderMenu ? <></> :
+                <button
+                    type="button"
+                    className={stylesButtons.button_secondary_blue}
+                    disabled={!canRefreshSelection}
+                    aria-label={__("reader.annotations.refreshSelectedText")}
+                    title={__("reader.annotations.refreshSelectedText")}
+                    onClick={(e) => {
+                        e.preventDefault();
+                        refreshSelectedText();
+                    }}
+                >
+                    <SVG ariaHidden svg={RefreshIcon} />
+                    {__("reader.annotations.refreshSelectedText")}
+                </button>
+            }
             <textarea
                 id={`${uuid}_edit`}
                 name="addNote"
@@ -239,6 +276,31 @@ export const AnnotationEdit: React.FC<IProps> = (props) => {
 
         {/* <label htmlFor="addNote">{__("reader.annotations.addNote")}</label> */}
         <div className={stylesAnnotations.annotation_form_textarea_buttons}>
+            {displayFromReaderMenu
+                ? <></>
+                : <Popover.Close
+                    type="button"
+                    className={stylesButtons.button_secondary_blue}
+                    disabled={!hasSelection}
+                    aria-label={__("reader.annotations.generateImage")}
+                    title={__("reader.annotations.generateImage")}
+                    onClick={(e) => {
+                        e.preventDefault();
+
+                        if (!hasSelection) {
+                            return;
+                        }
+
+                        const textareaValue = textAreaRef?.current?.value || "";
+                        const textareaNormalize = textareaValue.trim();
+                        save(hexToRgb(colorSelected), textareaNormalize, drawTypeSelected, tag ? [tag] : [], true);
+                        saveConfig();
+                    }}
+                >
+                    <SVG ariaHidden svg={PaletteIcon} />
+                    {__("reader.annotations.generateImage")}
+                </Popover.Close>
+            }
             {displayFromReaderMenu
                 ? <button className={stylesButtons.button_secondary_blue} aria-label={__("dialog.cancel")} onClick={cancel} type="button">{__("dialog.cancel")}</button>
                 : <Popover.Close className={stylesButtons.button_secondary_blue} aria-label={__("dialog.cancel")} onClick={cancel}>{__("dialog.cancel")}</Popover.Close>

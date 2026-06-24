@@ -1360,6 +1360,7 @@
             }
         },
         "tabs": {
+            "aiModels": "AI models",
             "appearance": "Appearance",
             "general": "General",
             "keyboardShortcuts": "Keyboard shortcuts",

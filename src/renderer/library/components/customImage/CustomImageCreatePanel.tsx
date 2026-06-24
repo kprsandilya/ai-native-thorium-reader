@@ -23,8 +23,7 @@ import { ILibraryRootState } from "readium-desktop/common/redux/states/renderer/
 import { customImageActions } from "readium-desktop/common/redux/actions";
 import { customImageStoreUrl } from "readium-desktop/common/redux/states/renderer/customImage";
 import { AI_IMAGE_STYLES, AI_IMAGE_STYLE_NONE_ID, applyAiImageStyle } from "readium-desktop/common/ai/imageStyles";
-import { AI_IMAGE_MODEL_OPTIONS } from "readium-desktop/common/ai/aiEngine";
-import { settingsAiImageModelId } from "readium-desktop/common/redux/states/settings";
+import { settingsAiImageModelId, settingsAiImageModels } from "readium-desktop/common/redux/states/settings";
 import { ComboBox, ComboBoxItem } from "readium-desktop/renderer/common/components/ComboBox";
 import { uuidv4 } from "readium-desktop/utils/uuid";
 
@@ -36,6 +35,7 @@ export const CustomImageCreatePanel: React.FC = () => {
     const list = useSelector((state: ILibraryRootState) => state.customImages.list);
     const status = useSelector((state: ILibraryRootState) => state.customImages.status);
     const defaultModelId = useSelector((state: ILibraryRootState) => settingsAiImageModelId(state.settings));
+    const availableModels = useSelector((state: ILibraryRootState) => settingsAiImageModels(state.settings));
 
     const [open, setOpen] = React.useState(false);
     const [prompt, setPrompt] = React.useState("");
@@ -81,10 +81,10 @@ export const CustomImageCreatePanel: React.FC = () => {
         }));
     }, [dispatch, prompt, negativePrompt, styleId, modelId]);
 
-    const modelOptions = AI_IMAGE_MODEL_OPTIONS.map((option, index) => ({
+    const modelOptions = availableModels.map((model, index) => ({
         id: index + 1,
-        value: option.id,
-        name: __(option.labelKey),
+        value: model.id,
+        name: model.label,
     }));
     const selectedModelKey = modelOptions.find(({ value }) => value === modelId)?.id;
 

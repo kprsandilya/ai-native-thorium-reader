@@ -3060,6 +3060,7 @@ declare namespace typed_i18n {
     }
   },
   readonly "tabs": {
+    readonly "aiModels": string,
     readonly "appearance": string,
     readonly "general": string,
     readonly "keyboardShortcuts": string,
@@ -3997,12 +3998,14 @@ declare namespace typed_i18n {
   (_: "settings.storage.locations.externalStorage", __?: {}): string;
   (_: "settings.storage.locations.title", __?: {}): string;
   (_: "settings.tabs", __?: {}): {
+  readonly "aiModels": string,
   readonly "appearance": string,
   readonly "general": string,
   readonly "keyboardShortcuts": string,
   readonly "profiles": string,
   readonly "storage": string
 };
+  (_: "settings.tabs.aiModels", __?: {}): string;
   (_: "settings.tabs.appearance", __?: {}): string;
   (_: "settings.tabs.general", __?: {}): string;
   (_: "settings.tabs.keyboardShortcuts", __?: {}): string;

@@ -9,7 +9,7 @@ import { type Reducer } from "redux";
 
 import { ISettingsState } from "readium-desktop/common/redux/states/settings";
 import { settingsActions } from "readium-desktop/common/redux/actions";
-import { DEFAULT_AI_IMAGE_MODEL_ID } from "readium-desktop/common/ai/aiEngine";
+import { BUILTIN_AI_IMAGE_MODELS, DEFAULT_AI_IMAGE_MODEL_ID } from "readium-desktop/common/ai/aiEngine";
 
 const initialState: ISettingsState = {
     enableAPIAPP: false,
@@ -17,12 +17,18 @@ const initialState: ISettingsState = {
     lcpAutoDeleteExpiredPublications: false,
     lcpAutoDeleteExpiredPublicationsForced: false,
     aiImageModelId: DEFAULT_AI_IMAGE_MODEL_ID,
+    aiImageModels: BUILTIN_AI_IMAGE_MODELS,
+    aiImageModelDownload: {},
 };
 
 function settingsReducer_(
     state: ISettingsState = initialState,
     action:
         settingsActions.aiImageModelId.TAction |
+        settingsActions.aiImageModels.TAction |
+        settingsActions.aiImageModelDownloadRequest.TAction |
+        settingsActions.aiImageModelDownloadStatus.TAction |
+        settingsActions.aiImageModelStatusRefresh.TAction |
         settingsActions.enableAPIAPP.TAction |
         settingsActions.minimizeLibraryToTray.TAction |
         settingsActions.lcpAutoDeleteExpiredPublications.TAction |
@@ -34,6 +40,30 @@ function settingsReducer_(
                 ...initialState,
                 ...state,
                 aiImageModelId: action.payload.aiImageModelId,
+            };
+        case settingsActions.aiImageModels.ID:
+            return {
+                ...initialState,
+                ...state,
+                aiImageModels: action.payload.aiImageModels,
+            };
+        case settingsActions.aiImageModelDownloadRequest.ID:
+            return {
+                ...initialState,
+                ...state,
+                aiImageModelDownload: {
+                    ...state.aiImageModelDownload,
+                    [action.payload.modelId]: { state: "downloading" },
+                },
+            };
+        case settingsActions.aiImageModelDownloadStatus.ID:
+            return {
+                ...initialState,
+                ...state,
+                aiImageModelDownload: {
+                    ...state.aiImageModelDownload,
+                    [action.payload.modelId]: { state: action.payload.state, error: action.payload.error },
+                },
             };
         case settingsActions.enableAPIAPP.ID:
             return {

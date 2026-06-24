@@ -115,3 +115,25 @@ export async function aiEngineUnload(modelId?: string): Promise<TAiEngineProxyRe
         body: JSON.stringify(modelId ? { model_id: modelId } : {}),
     });
 }
+
+/** Pre-fetch a model's weights into the local Hugging Face cache (can take a while). */
+export async function aiEngineDownload(
+    modelId: string,
+): Promise<TAiEngineProxyResult<{ model_id: string; status: string; detail: string; cache_path?: string }>> {
+
+    return proxy("/download", {
+        method: "POST",
+        body: JSON.stringify({ model_id: modelId }),
+    });
+}
+
+/** Report whether a model's weights are already cached locally. */
+export async function aiEngineModelStatus(
+    modelId: string,
+): Promise<TAiEngineProxyResult<{ model_id: string; downloaded: boolean; detail: string }>> {
+
+    return proxy("/model_status", {
+        method: "POST",
+        body: JSON.stringify({ model_id: modelId }),
+    });
+}

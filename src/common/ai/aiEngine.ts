@@ -25,23 +25,42 @@ export const FLUX_SCHNELL_AI_IMAGE_MODEL_ID = "black-forest-labs/FLUX.1-schnell"
 /** High-quality opt-in model; needs a CUDA GPU with enough VRAM and HF license acceptance. */
 export const FLUX_AI_IMAGE_MODEL_ID = "black-forest-labs/FLUX.1-dev-FP8";
 
-export interface IAiImageModelOption {
+// A registered AI image model. `id` is the Hugging Face repo id passed to the
+// engine; `label` is the user-facing display name. Built-in entries ship with
+// the app; user-added entries are persisted in the settings Redux state and can
+// be added / removed / set as default from the "AI models" settings tab.
+export interface IAiImageModelEntry {
     id: string;
-    /** Stable key used to look up a localized label in settings. */
-    labelKey:
-        | "settings.aiImage.model.sdTurbo"
-        | "settings.aiImage.model.fluxSchnell"
-        | "settings.aiImage.model.fluxDevFp8";
+    label: string;
+    /** Informational: gated repos require accepting a Hugging Face license. */
+    gated?: boolean;
+    /** True for the bundled defaults (kept distinct from user-added models). */
+    builtin?: boolean;
 }
 
-export const AI_IMAGE_MODEL_OPTIONS: IAiImageModelOption[] = [
-    { id: DEFAULT_AI_IMAGE_MODEL_ID, labelKey: "settings.aiImage.model.sdTurbo" },
-    { id: FLUX_SCHNELL_AI_IMAGE_MODEL_ID, labelKey: "settings.aiImage.model.fluxSchnell" },
-    { id: FLUX_AI_IMAGE_MODEL_ID, labelKey: "settings.aiImage.model.fluxDevFp8" },
+// Download lifecycle of a model's weights in the local Hugging Face cache.
+export type TAiImageModelDownloadState = "idle" | "downloading" | "downloaded" | "error";
+
+export interface IAiImageModelDownloadStatus {
+    state: TAiImageModelDownloadState;
+    error?: string;
+}
+
+// Seed list used until the user customizes their registry. Kept in sync with the
+// engine's supported model families (SD-Turbo, FLUX schnell, FLUX dev FP8).
+export const BUILTIN_AI_IMAGE_MODELS: IAiImageModelEntry[] = [
+    { id: DEFAULT_AI_IMAGE_MODEL_ID, label: "SD-Turbo (default, fast)", gated: false, builtin: true },
+    { id: FLUX_SCHNELL_AI_IMAGE_MODEL_ID, label: "FLUX.1-schnell (high quality, GPU)", gated: false, builtin: true },
+    { id: FLUX_AI_IMAGE_MODEL_ID, label: "FLUX.1-dev FP8 (best quality, GPU)", gated: true, builtin: true },
 ];
 
+/** Loose validation that a string looks like a Hugging Face repo id (owner/name). */
+export function isValidHfRepoId(modelId: string | undefined): modelId is string {
+    return !!modelId && /^[\w.-]+\/[\w.-]+$/.test(modelId.trim());
+}
+
 export function isKnownAiImageModelId(modelId: string | undefined): modelId is string {
-    return !!modelId && AI_IMAGE_MODEL_OPTIONS.some((option) => option.id === modelId);
+    return !!modelId && BUILTIN_AI_IMAGE_MODELS.some((option) => option.id === modelId);
 }
 
 export function resolveAiImageModelId(modelId: string | undefined): string {

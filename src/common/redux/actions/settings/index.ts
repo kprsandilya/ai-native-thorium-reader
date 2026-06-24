@@ -6,6 +6,10 @@
 // ==LICENSE-END==
 
 import * as aiImageModelId from "./aiImageModelId";
+import * as aiImageModelDownloadRequest from "./aiImageModelDownloadRequest";
+import * as aiImageModelDownloadStatus from "./aiImageModelDownloadStatus";
+import * as aiImageModels from "./aiImageModels";
+import * as aiImageModelStatusRefresh from "./aiImageModelStatusRefresh";
 import * as enableAPIAPP from "./enableAPIAPP";
 import * as lcpAutoDeleteExpiredPublications from "./lcpAutoDeleteExpiredPublications";
 import * as lcpAutoDeleteExpiredPublicationsForced from "./lcpAutoDeleteExpiredPublicationsForced";
@@ -13,6 +17,10 @@ import * as minimizeLibraryToTray from "./minimizeLibraryToTray";
 
 export {
     aiImageModelId,
+    aiImageModelDownloadRequest,
+    aiImageModelDownloadStatus,
+    aiImageModels,
+    aiImageModelStatusRefresh,
     enableAPIAPP,
     lcpAutoDeleteExpiredPublications,
     lcpAutoDeleteExpiredPublicationsForced,

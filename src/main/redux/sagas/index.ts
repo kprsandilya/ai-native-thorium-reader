@@ -37,6 +37,7 @@ import * as catalog from "./catalog";
 import * as annotation from "./note";
 import * as aiImage from "./ai/generateImage";
 import * as customImage from "./ai/generateCustomImage";
+import * as manageModels from "./ai/manageModels";
 import * as customization from "./customization";
 import * as lcpSharedWorkstationCleanup from "./publication/lcpSharedWorkstationCleanup";
 
@@ -147,6 +148,9 @@ export function* rootSaga() {
 
     // Standalone custom AI image generation + management saga (library landing page)
     yield customImage.saga();
+
+    // AI model registry management saga (download / status of selectable models)
+    yield manageModels.saga();
 
     // get/set catalog in library win
     yield catalog.saga();

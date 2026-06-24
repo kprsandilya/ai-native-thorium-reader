@@ -39,8 +39,8 @@ import { availableLanguages } from "readium-desktop/common/services/translator";
 import { ComboBox, ComboBoxItem } from "readium-desktop/renderer/common/components/ComboBox";
 import { useDispatch } from "readium-desktop/renderer/common/hooks/useDispatch";
 import { authActions, catalogActions, creatorActions, customizationActions, i18nActions, noteExport, screenReaderActions, settingsActions, themeActions } from "readium-desktop/common/redux/actions";
-import { AI_IMAGE_MODEL_OPTIONS } from "readium-desktop/common/ai/aiEngine";
-import { settingsAiImageModelId } from "readium-desktop/common/redux/states/settings";
+import { settingsAiImageModelId, settingsAiImageModels } from "readium-desktop/common/redux/states/settings";
+import { AiModelsSettings } from "./AiModelsSettings";
 import * as BinIcon from "readium-desktop/renderer/assets/icons/trash-icon.svg";
 import { ICommonRootState } from "readium-desktop/common/redux/states/commonRootState";
 import { TTheme } from "readium-desktop/common/redux/states/theme";
@@ -568,11 +568,13 @@ const AiImageModelSettings = () => {
     const dispatch = useDispatch();
     const aiImageModelId = useSelector((state: ILibraryRootState) =>
         settingsAiImageModelId(state.settings));
+    const models = useSelector((state: ILibraryRootState) =>
+        settingsAiImageModels(state.settings));
 
-    const options = AI_IMAGE_MODEL_OPTIONS.map((option, index) => ({
+    const options = models.map((model, index) => ({
         id: index + 1,
-        value: option.id,
-        name: __(option.labelKey),
+        value: model.id,
+        name: model.label,
     }));
 
     const setModel = (selected: React.Key) => {
@@ -1076,6 +1078,10 @@ export const Settings: React.FC<ISettingsProps> = () => {
                             <SVG ariaHidden svg={PaletteIcon} />
                             <h3 dir={isRTL ? "rtl" : "ltr"}>{__("settings.tabs.appearance")}</h3>
                         </Tabs.Trigger>
+                        <Tabs.Trigger value="tab7" onFocus={() => setTabTitle(__("settings.tabs.aiModels"))}>
+                            <SVG ariaHidden svg={PaletteIcon} />
+                            <h3 dir={isRTL ? "rtl" : "ltr"}>{__("settings.tabs.aiModels")}</h3>
+                        </Tabs.Trigger>
                         <Tabs.Trigger value="tab4" onFocus={() => setTabTitle(__("settings.tabs.keyboardShortcuts"))}>
                             <SVG ariaHidden svg={KeyReturnIcon} />
                             <h3 dir={isRTL ? "rtl" : "ltr"}>{__("settings.tabs.keyboardShortcuts")}</h3>
@@ -1114,6 +1120,11 @@ export const Settings: React.FC<ISettingsProps> = () => {
                         <Tabs.Content value="tab2" tabIndex={-1}>
                             <div className={stylesSettings.settings_tab}>
                                 <Themes />
+                            </div>
+                        </Tabs.Content>
+                        <Tabs.Content value="tab7" tabIndex={-1}>
+                            <div className={stylesSettings.settings_tab}>
+                                <AiModelsSettings />
                             </div>
                         </Tabs.Content>
                         <Tabs.Content value="tab4" tabIndex={-1}>

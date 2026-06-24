@@ -49,6 +49,8 @@ export const convertDiffableReduxState = (nextState: Partial<PersistRootState>):
             ...nextState.settings,
             // Command-line forced shared-computer mode must remain scoped to the current process.
             lcpAutoDeleteExpiredPublicationsForced: false,
+            // Transient per-model download status is recomputed at runtime; never persist it.
+            aiImageModelDownload: {},
         }
         : nextState.settings;
 

@@ -97,6 +97,8 @@ const SYNCHRONIZABLE_ACTIONS: string[] = [
 
     settingsActions.minimizeLibraryToTray.ID,
     settingsActions.aiImageModelId.ID,
+    settingsActions.aiImageModels.ID,
+    settingsActions.aiImageModelDownloadStatus.ID,
     settingsActions.lcpAutoDeleteExpiredPublications.ID,
     settingsActions.lcpAutoDeleteExpiredPublicationsForced.ID,
 

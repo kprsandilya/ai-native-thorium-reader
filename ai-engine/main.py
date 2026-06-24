@@ -38,6 +38,14 @@ DEFAULT_MODEL_ID = os.environ.get("THORIUM_AI_MODEL_ID", "stabilityai/sd-turbo")
 # for big models like FLUX on consumer GPUs). Disable with THORIUM_AI_CPU_OFFLOAD=0.
 CPU_OFFLOAD = os.environ.get("THORIUM_AI_CPU_OFFLOAD", "1").lower() not in ("0", "false", "no")
 
+# How to quantize diffusers-layout FLUX models (schnell / dev) when loading on a
+# CUDA GPU. "nf4" (4-bit, default) shrinks the ~24 GB bf16 model to ~6-7 GB so it
+# fits on 8 GB laptop GPUs and can run alongside the app. bitsandbytes quantizes
+# layer-by-layer *during* load, so peak RAM/VRAM stays low (unlike post-load
+# quantizers that must first materialize the full bf16 model). Set "none" to load
+# full bf16 (needs ~24 GB RAM/VRAM). Ignored on CPU/MPS (bitsandbytes is CUDA-only).
+FLUX_QUANTIZE = os.environ.get("THORIUM_AI_FLUX_QUANTIZE", "nf4").lower()
+
 app = FastAPI(
     title="Thorium AI Engine",
     description="Local AI image generation and model-management service for Thorium Reader.",
@@ -108,6 +116,18 @@ class UnloadResponse(BaseModel):
     detail: str
 
 
+class ModelStatusRequest(BaseModel):
+    model_id: str = Field(..., description="Hugging Face repo id to check for cached weights.")
+
+
+class ModelStatusResponse(BaseModel):
+    model_id: str
+    # True when all weight files (and, for single-file FLUX, the base repo) are
+    # present in the local Hugging Face cache so generation can run offline.
+    downloaded: bool
+    detail: str
+
+
 # ---------------------------------------------------------------------------
 # Device + pipeline management
 # ---------------------------------------------------------------------------
@@ -165,15 +185,34 @@ class WeightsNotDownloadedError(RuntimeError):
     """
 
 
-def _finalize_flux(pipeline, device: str):
-    """Place a loaded FLUX pipeline on the right device / offload strategy."""
+def _finalize_flux(pipeline, device: str, quantized: bool = False):
+    """Place a loaded FLUX pipeline on the right device / offload strategy.
 
-    if device == "cuda" and CPU_OFFLOAD:
+    When `quantized` (bitsandbytes 4-bit), the big components are already
+    resident on the GPU and cannot be relocated with `.to()`, so we rely on
+    accelerate's CPU offload (which does support 4-bit modules) and never call
+    `.to(device)` directly.
+    """
+
+    if device == "cuda" and (CPU_OFFLOAD or quantized):
         # Keep most of the 12B model on CPU and stream layers to the GPU as
         # needed: fits much smaller cards (e.g. 8 GB laptops) at the cost of speed.
         pipeline.enable_model_cpu_offload()
+    elif quantized:
+        # 4-bit weights live on the GPU already; leave them in place.
+        pass
     else:
         pipeline = pipeline.to(device)
+
+    # The VAE decode of a 1024px FLUX latent is a large, transient VRAM spike
+    # that can push an 8 GB GPU into slow shared-memory spillover. Slicing +
+    # tiling decode in chunks instead, with negligible quality impact.
+    for enable in ("enable_vae_slicing", "enable_vae_tiling"):
+        try:
+            getattr(pipeline, enable)()
+        except Exception:
+            pass
+
     return pipeline
 
 
@@ -230,11 +269,110 @@ def _list_repo_files(model_id: str) -> list[str]:
         ) from e
 
 
+def _repo_weights_cached(model_id: str) -> bool:
+    """True when every weight file of `model_id` is present in the local cache.
+
+    Uses the HF file listing (network) to know which weight files exist, then
+    checks each is cached locally. No weights are downloaded.
+    """
+
+    from huggingface_hub import try_to_load_from_cache
+
+    files = _list_repo_files(model_id)
+    weight_files = [f for f in files if f.endswith((".safetensors", ".bin", ".ckpt"))]
+    if not weight_files:
+        return False
+    for f in weight_files:
+        if not isinstance(try_to_load_from_cache(model_id, f), str):
+            return False
+    return True
+
+
+def _model_downloaded(model_id: str) -> bool:
+    """Whether a model is ready to run locally.
+
+    For single-file FLUX repos (no model_index.json) the base diffusers repo
+    (text encoders / VAE) must also be cached.
+    """
+
+    try:
+        if not _repo_weights_cached(model_id):
+            return False
+        if _is_flux(model_id):
+            files = _list_repo_files(model_id)
+            if "model_index.json" not in files:
+                return _repo_weights_cached(FLUX_BASE_MODEL_ID)
+        return True
+    except Exception:
+        return False
+
+
+def _load_flux_diffusers_nf4(model_id: str, dtype):
+    """Load a diffusers-layout FLUX repo with the transformer + T5 text encoder
+    quantized to 4-bit (nf4) via bitsandbytes.
+
+    This is the only way to fit FLUX (~24 GB in bf16) on an 8 GB GPU: bnb
+    quantizes weights layer-by-layer as they're read from the cached checkpoint,
+    so peak memory tracks the ~6-7 GB quantized result rather than the full bf16
+    model. Returns None if the repo isn't a cached diffusers-layout FLUX repo, so
+    the caller can fall back to the single-file path. Weights are never
+    downloaded here (local_files_only=True).
+    """
+
+    from diffusers import BitsAndBytesConfig as DiffusersBnbConfig
+    from diffusers import FluxPipeline, FluxTransformer2DModel
+    from transformers import BitsAndBytesConfig as TransformersBnbConfig
+    from transformers import T5EncoderModel
+
+    transformer_quant = DiffusersBnbConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=dtype,
+        bnb_4bit_use_double_quant=True,
+    )
+    text_encoder_quant = TransformersBnbConfig(
+        load_in_4bit=True,
+        bnb_4bit_quant_type="nf4",
+        bnb_4bit_compute_dtype=dtype,
+        bnb_4bit_use_double_quant=True,
+    )
+
+    try:
+        transformer = FluxTransformer2DModel.from_pretrained(
+            model_id,
+            subfolder="transformer",
+            quantization_config=transformer_quant,
+            torch_dtype=dtype,
+            local_files_only=True,
+        )
+        # The T5-XXL text encoder is the other memory hog (~9.5 GB bf16); quantize
+        # it too. The small CLIP encoder / VAE stay full precision.
+        text_encoder_2 = T5EncoderModel.from_pretrained(
+            model_id,
+            subfolder="text_encoder_2",
+            quantization_config=text_encoder_quant,
+            torch_dtype=dtype,
+            local_files_only=True,
+        )
+        pipeline = FluxPipeline.from_pretrained(
+            model_id,
+            transformer=transformer,
+            text_encoder_2=text_encoder_2,
+            torch_dtype=dtype,
+            local_files_only=True,
+        )
+    except Exception:
+        return None
+    return pipeline
+
+
 def _load_flux_pipeline(model_id: str, device: str):
     """Load a FLUX pipeline, handling both diffusers-format and single-file
     (e.g. FP8) repositories.
 
-    Diffusers-layout repos (e.g. FLUX.1-schnell, FLUX.1-dev) load directly.
+    Diffusers-layout repos (e.g. FLUX.1-schnell, FLUX.1-dev) load directly. On a
+    CUDA GPU they are quantized to 4-bit (nf4) by default (THORIUM_AI_FLUX_QUANTIZE)
+    so they fit on small cards; set it to "none" for full bf16.
     Single-file FP8 repos ship only the transformer checkpoint, so the text
     encoders / VAE / scheduler are taken from the base FLUX.1-dev diffusers repo
     (FLUX_BASE_MODEL_ID) and the fp8 transformer is swapped in.
@@ -250,8 +388,15 @@ def _load_flux_pipeline(model_id: str, device: str):
     # FLUX runs in bfloat16.
     dtype = torch.bfloat16
 
+    # Preferred path on consumer GPUs: 4-bit (nf4) quantized diffusers-layout
+    # load, which keeps peak memory low enough to fit an 8 GB GPU.
+    if device == "cuda" and FLUX_QUANTIZE == "nf4":
+        pipeline = _load_flux_diffusers_nf4(model_id, dtype)
+        if pipeline is not None:
+            return _finalize_flux(pipeline, device, quantized=True)
+
     # Diffusers layout (repo has model_index.json), loaded from the local cache
-    # only. We never download here.
+    # only at full bf16. We never download here.
     pipeline = None
     try:
         pipeline = FluxPipeline.from_pretrained(
@@ -486,17 +631,44 @@ def unload(request: UnloadRequest = UnloadRequest()) -> UnloadResponse:
     return UnloadResponse(status="ok", detail=detail)
 
 
+@app.post("/model_status", response_model=ModelStatusResponse)
+def model_status(request: ModelStatusRequest) -> ModelStatusResponse:
+    """Report whether a model's weights are already in the local cache."""
+
+    downloaded = _model_downloaded(request.model_id)
+    return ModelStatusResponse(
+        model_id=request.model_id,
+        downloaded=downloaded,
+        detail=(
+            "Weights are cached and ready to use."
+            if downloaded
+            else "Weights are not fully downloaded yet."
+        ),
+    )
+
+
 @app.post("/download", response_model=DownloadResponse)
 def download(request: DownloadRequest) -> DownloadResponse:
     """Pre-fetch model weights so generation can later run fully offline."""
 
     try:
+        import os
+
         from huggingface_hub import snapshot_download
 
         cache_path = snapshot_download(
             repo_id=request.model_id,
             revision=request.revision,
         )
+
+        # Single-file FLUX checkpoints (no model_index.json) also need the base
+        # diffusers repo for their text encoders / VAE / scheduler.
+        extra_detail = ""
+        if _is_flux(request.model_id) and not os.path.exists(
+            os.path.join(cache_path, "model_index.json")
+        ):
+            snapshot_download(repo_id=FLUX_BASE_MODEL_ID)
+            extra_detail = f" Also fetched base components {FLUX_BASE_MODEL_ID}."
     except Exception as e:  # noqa: BLE001
         raise HTTPException(
             status_code=500,
@@ -508,7 +680,7 @@ def download(request: DownloadRequest) -> DownloadResponse:
         status="completed",
         detail=(
             f"Downloaded {request.model_id} "
-            f"(revision {request.revision or 'main'}) into the local cache."
+            f"(revision {request.revision or 'main'}) into the local cache.{extra_detail}"
         ),
         cache_path=cache_path,
     )

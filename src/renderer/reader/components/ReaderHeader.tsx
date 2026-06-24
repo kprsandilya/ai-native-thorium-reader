@@ -75,6 +75,7 @@ import { MySelectProps, Select } from "readium-desktop/renderer/common/component
 import { ComboBox, ComboBoxItem } from "readium-desktop/renderer/common/components/ComboBox";
 import { readerLocalActionAnnotations, readerLocalActionToggleMenu, readerLocalActionToggleSettings } from "../redux/actions";
 import { AnnotationEdit } from "./AnnotationEdit";
+import { AiImageGenerateDialog } from "./AiImageGenerateDialog";
 import { isAudiobookFn } from "readium-desktop/common/isManifestType";
 import { VoiceSelection } from "./header/voiceSelection";
 import type { TLanguage } from "./header/voiceSelection";
@@ -998,6 +999,7 @@ export class ReaderHeader extends React.Component<IProps, IState> {
                             </Popover.Portal>
                         </Popover.Root>
 
+                        <AiImageGenerateDialog />
 
                         <li
                             {...(this.props.menuOpen &&

@@ -17,6 +17,7 @@ import { IOpdsHeaderState, IOpdsSearchState } from "./opds";
 import { CatalogView } from "readium-desktop/common/views/catalog";
 import { IWizardState } from "../wizard";
 import { ISettingsState } from "../settings";
+import { ICustomImageState } from "./customImage";
 
 export interface ILibraryRootState extends IRendererCommonRootState {
     opds: {
@@ -40,4 +41,5 @@ export interface ILibraryRootState extends IRendererCommonRootState {
     };
     wizard: IWizardState;
     settings: ISettingsState;
+    customImages: ICustomImageState;
 }

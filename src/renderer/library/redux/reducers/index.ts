@@ -36,6 +36,7 @@ import { wizardReducer } from "readium-desktop/common/redux/reducers/wizard";
 import { versionUpdateReducer } from "readium-desktop/common/redux/reducers/version-update";
 import { creatorReducer } from "readium-desktop/common/redux/reducers/creator";
 import { settingsReducer } from "readium-desktop/common/redux/reducers/settings";
+import { customImageReducer } from "readium-desktop/common/redux/reducers/customImage";
 import { importAnnotationReducer } from "readium-desktop/renderer/common/redux/reducers/importAnnotation";
 import { lcpReducer } from "readium-desktop/common/redux/reducers/lcp";
 import { noteExportReducer } from "readium-desktop/common/redux/reducers/noteExport";
@@ -104,6 +105,7 @@ export const rootReducer = (routerReducer: Reducer<RouterState>) => { // : Reduc
         wizard: wizardReducer,
         creator: creatorReducer,
         settings: settingsReducer,
+        customImages: customImageReducer,
         importAnnotations: importAnnotationReducer,
         lcp: lcpReducer,
         noteExport: noteExportReducer,

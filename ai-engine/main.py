@@ -57,6 +57,14 @@ app.add_middleware(
 
 class GenerateRequest(BaseModel):
     prompt: str = Field(..., description="Text prompt to condition generation on.")
+    negative_prompt: Optional[str] = Field(
+        default=None,
+        description=(
+            "Things to avoid in the image. Only takes effect on models that use "
+            "classifier-free guidance (guidance_scale > 1, e.g. FLUX.1-dev); "
+            "distilled few-step models like SD-Turbo run at guidance 0 and ignore it."
+        ),
+    )
     model_id: Optional[str] = Field(
         default=None,
         description="Hugging Face model id to use; defaults to the configured model.",
@@ -140,9 +148,101 @@ def _is_flux(model_id: str) -> bool:
     return "flux" in model_id.lower()
 
 
+# Base diffusers repo that supplies the text encoders / VAE / scheduler when a
+# FLUX model is distributed as a single-file (FP8) transformer checkpoint.
+# Override with THORIUM_AI_FLUX_BASE_ID (e.g. to point at a local mirror).
+FLUX_BASE_MODEL_ID = os.environ.get("THORIUM_AI_FLUX_BASE_ID", "black-forest-labs/FLUX.1-dev")
+
+
+class WeightsNotDownloadedError(RuntimeError):
+    """Raised when a model's weights aren't in the local cache yet.
+
+    Generation deliberately never downloads multi-gigabyte weights on the fly:
+    doing so inside a /generate request makes the call appear to hang and can
+    crash the engine mid-download (which surfaces to the app as a generic
+    "fetch failed" / connection reset). Pre-fetch with `npm run
+    ai-engine:download <model_id>` instead.
+    """
+
+
+def _finalize_flux(pipeline, device: str):
+    """Place a loaded FLUX pipeline on the right device / offload strategy."""
+
+    if device == "cuda" and CPU_OFFLOAD:
+        # Keep most of the 12B model on CPU and stream layers to the GPU as
+        # needed: fits much smaller cards (e.g. 8 GB laptops) at the cost of speed.
+        pipeline.enable_model_cpu_offload()
+    else:
+        pipeline = pipeline.to(device)
+    return pipeline
+
+
+def _maybe_quantize_fp8(module) -> bool:
+    """Quantize a module to fp8 with optimum-quanto when available.
+
+    Recommended for FLUX on consumer GPUs: keeps the transformer near its fp8
+    size (~12 GB) instead of dequantizing to bf16 (~24 GB). No-op (returns
+    False) when optimum-quanto isn't installed.
+    """
+
+    try:
+        from optimum.quanto import freeze, qfloat8, quantize
+    except Exception:
+        return False
+
+    quantize(module, weights=qfloat8)
+    freeze(module)
+    return True
+
+
+def _require_cached_file(model_id: str, filename: str) -> str:
+    """Resolve a repo file from the local cache, or fail with guidance.
+
+    Never downloads: if the file isn't cached we raise so the caller can tell
+    the user to pre-fetch the weights instead of silently pulling gigabytes
+    during a generation request.
+    """
+
+    from huggingface_hub import hf_hub_download
+
+    try:
+        return hf_hub_download(model_id, filename, local_files_only=True)
+    except Exception as e:
+        raise WeightsNotDownloadedError(
+            f"FLUX weights for {model_id!r} ('{filename}') are not downloaded yet. "
+            f"Pre-fetch them first (this is a large, one-time download): "
+            f"`npm run ai-engine:download {model_id}`."
+        ) from e
+
+
+def _list_repo_files(model_id: str) -> list[str]:
+    """List the files in a repo. Raises actionable guidance when the listing
+    can't be resolved (e.g. offline with no cached snapshot)."""
+
+    from huggingface_hub import list_repo_files
+
+    try:
+        return list_repo_files(model_id)
+    except Exception as e:
+        raise WeightsNotDownloadedError(
+            f"Could not resolve files for {model_id!r} ({e}). Pre-fetch the model "
+            f"first: `npm run ai-engine:download {model_id}`."
+        ) from e
+
+
 def _load_flux_pipeline(model_id: str, device: str):
     """Load a FLUX pipeline, handling both diffusers-format and single-file
-    (e.g. FP8) repositories."""
+    (e.g. FP8) repositories.
+
+    Diffusers-layout repos (e.g. FLUX.1-schnell, FLUX.1-dev) load directly.
+    Single-file FP8 repos ship only the transformer checkpoint, so the text
+    encoders / VAE / scheduler are taken from the base FLUX.1-dev diffusers repo
+    (FLUX_BASE_MODEL_ID) and the fp8 transformer is swapped in.
+
+    In all cases weights must already be cached locally: generation never pulls
+    multi-gigabyte weights on the fly (that can hang the request and crash the
+    engine mid-download). Missing weights raise WeightsNotDownloadedError.
+    """
 
     import torch
     from diffusers import FluxPipeline
@@ -150,31 +250,58 @@ def _load_flux_pipeline(model_id: str, device: str):
     # FLUX runs in bfloat16.
     dtype = torch.bfloat16
 
+    # Diffusers layout (repo has model_index.json), loaded from the local cache
+    # only. We never download here.
+    pipeline = None
     try:
-        # Works when the repo is in diffusers layout (has model_index.json).
-        pipeline = FluxPipeline.from_pretrained(model_id, torch_dtype=dtype)
+        pipeline = FluxPipeline.from_pretrained(
+            model_id, torch_dtype=dtype, local_files_only=True,
+        )
     except Exception:
-        # FP8 / ComfyUI-style repos ship a single transformer checkpoint instead.
-        # Load that file directly; the text encoders / VAE are pulled from the
-        # base FLUX.1-dev config (also gated, so the same HF token/license apply).
-        from huggingface_hub import hf_hub_download, list_repo_files
+        pipeline = None
+    if pipeline is not None:
+        return _finalize_flux(pipeline, device)
 
-        safetensors = [f for f in list_repo_files(model_id) if f.endswith(".safetensors")]
-        if not safetensors:
-            raise
-        # Prefer a file that looks like the main FLUX transformer checkpoint.
-        ckpt = next((f for f in safetensors if "flux" in f.lower()), safetensors[0])
-        ckpt_path = hf_hub_download(model_id, ckpt)
-        pipeline = FluxPipeline.from_single_file(ckpt_path, torch_dtype=dtype)
+    # Not cached as a diffusers pipeline. Decide whether it's a diffusers-layout
+    # repo that simply isn't downloaded yet, or a single-file checkpoint repo.
+    files = _list_repo_files(model_id)
+    if "model_index.json" in files:
+        raise WeightsNotDownloadedError(
+            f"FLUX weights for {model_id!r} are not downloaded yet. Pre-fetch them "
+            f"first (large, one-time download): `npm run ai-engine:download {model_id}`."
+        )
 
-    if device == "cuda" and CPU_OFFLOAD:
-        # Keep most of the 12B model on CPU and stream layers to the GPU as
-        # needed: fits much smaller cards at the cost of speed.
-        pipeline.enable_model_cpu_offload()
-    else:
-        pipeline = pipeline.to(device)
+    # Single-file (FP8 / ComfyUI-style) checkpoint path.
+    from diffusers import FluxTransformer2DModel
 
-    return pipeline
+    safetensors = [f for f in files if f.endswith(".safetensors")]
+    if not safetensors:
+        raise RuntimeError(
+            f"{model_id!r} is neither a diffusers FLUX pipeline nor a single-file "
+            f"checkpoint repo (no .safetensors found); cannot load it as FLUX."
+        )
+    # Prefer a file that looks like the main FLUX transformer checkpoint.
+    ckpt = next((f for f in safetensors if "flux" in f.lower()), safetensors[0])
+    ckpt_path = _require_cached_file(model_id, ckpt)
+
+    transformer = FluxTransformer2DModel.from_single_file(ckpt_path, torch_dtype=dtype)
+    _maybe_quantize_fp8(transformer)
+
+    try:
+        pipeline = FluxPipeline.from_pretrained(
+            FLUX_BASE_MODEL_ID,
+            transformer=transformer,
+            torch_dtype=dtype,
+            local_files_only=True,
+        )
+    except Exception as e:
+        raise WeightsNotDownloadedError(
+            f"The FLUX base components ({FLUX_BASE_MODEL_ID}: text encoders, VAE) "
+            f"needed to run {model_id!r} are not fully downloaded ({e}). Pre-fetch "
+            f"them with: `npm run ai-engine:download {FLUX_BASE_MODEL_ID}`."
+        ) from e
+
+    return _finalize_flux(pipeline, device)
 
 
 def _unload_pipelines(model_id: Optional[str] = None) -> None:
@@ -295,18 +422,39 @@ def generate(request: GenerateRequest) -> GenerateResponse:
 
         steps, guidance = _generation_params(model_id, request)
 
-        result = pipeline(
+        call_kwargs = dict(
             prompt=request.prompt,
             num_inference_steps=steps,
             guidance_scale=guidance,
             generator=generator,
         )
+
+        # Negative prompts only matter when classifier-free guidance is active.
+        # SD-Turbo & friends run at guidance 0, so the negative is a no-op there.
+        negative = (request.negative_prompt or "").strip()
+        if negative:
+            call_kwargs["negative_prompt"] = negative
+            if _is_flux(model_id):
+                # FLUX needs "true" CFG turned on for a negative prompt to apply.
+                call_kwargs["true_cfg_scale"] = 2.0
+
+        try:
+            result = pipeline(**call_kwargs)
+        except TypeError:
+            # Pipeline doesn't accept negative_prompt / true_cfg_scale: retry plain.
+            call_kwargs.pop("negative_prompt", None)
+            call_kwargs.pop("true_cfg_scale", None)
+            result = pipeline(**call_kwargs)
         image = result.images[0]
 
         buffer = io.BytesIO()
         image.save(buffer, format="PNG")
         image_base64 = base64.b64encode(buffer.getvalue()).decode("ascii")
 
+    except WeightsNotDownloadedError as e:
+        # Actionable, expected condition (weights not pre-fetched): return the
+        # guidance verbatim so the app can show it directly.
+        raise HTTPException(status_code=409, detail=str(e)) from e
     except Exception as e:  # noqa: BLE001 - surface any inference error to the caller
         raise HTTPException(
             status_code=500,

@@ -15,11 +15,13 @@ export interface IPayload {
     // can persist the updated note (with generatedImagePath) without depending on
     // any main-side copy of the reader note state.
     note: INoteState;
-    // Text prompt used for generation (typically the highlighted text).
+    // Text prompt used for generation (highlighted text, optionally styled).
     prompt: string;
+    // Optional negative prompt (things to avoid). Effective on guided models only.
+    negativePrompt?: string;
 }
 
-export function build(publicationIdentifier: string, note: INoteState, prompt: string):
+export function build(publicationIdentifier: string, note: INoteState, prompt: string, negativePrompt?: string):
     ActionWithReaderPublicationIdentifierDestination<typeof ID, IPayload> {
 
     return {
@@ -27,6 +29,7 @@ export function build(publicationIdentifier: string, note: INoteState, prompt: s
         payload: {
             note,
             prompt,
+            negativePrompt,
         },
         destination: {
             publicationIdentifier,

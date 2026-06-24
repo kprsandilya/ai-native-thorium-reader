@@ -22,8 +22,10 @@ import * as GlobeIcon from "readium-desktop/renderer/assets/icons/globe-icon.svg
 import * as CatalogsIcon from "readium-desktop/renderer/assets/icons/catalogs-icon.svg";
 import * as ShelfIcon from "readium-desktop/renderer/assets/icons/shelf-icon.svg";
 import * as InfoIcon from "readium-desktop/renderer/assets/icons/info-icon.svg";
+import * as GridIcon from "readium-desktop/renderer/assets/icons/grid-icon.svg";
 import SVG from "readium-desktop/renderer/common/components/SVG";
 import { Settings } from "../settings/Settings";
+import { CustomImageCreatePanel } from "../customImage/CustomImageCreatePanel";
 import { _APP_NAME } from "readium-desktop/preprocessor-directives";
 import { buildOpdsBrowserRoute } from "../../opds/route";
 import { encodeURIComponent_RFC3986 } from "@r2-utils-js/_utils/http/UrlUtils";
@@ -144,6 +146,14 @@ const Header = () => {
             matchRoutes: ["/opds"],
             styles: [],
             svg: CatalogsIcon,
+        },
+        {
+            route: "/images",
+            label: __("library.customImage.manage.nav"),
+            matchRoutes: ["/images"],
+            searchEnable: false,
+            styles: [],
+            svg: GridIcon,
         },
         // {
         //     route: "/settings",
@@ -345,6 +355,9 @@ const Header = () => {
                     }) : <></>
                 }
                 </div>
+                <li>
+                    <CustomImageCreatePanel />
+                </li>
                 <li /* style={{position: "absolute", bottom: "10px" }} */>
                     <Settings />
                 </li>

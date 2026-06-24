@@ -27,6 +27,7 @@ import { IBookmarkTotalCountState } from "readium-desktop/common/redux/states/re
 import { DockState } from "../dock";
 import { INoteState } from "./note";
 import { IAiImageState } from "./aiImage";
+import { IAiImageDialogState } from "./aiImageDialog";
 
 export interface IReaderPdfConfig{
         scale: "page-fit" | "page-width" | number;
@@ -39,6 +40,7 @@ export interface IReaderRootState extends IRendererCommonRootState {
     mode: ReaderMode;
     annotation: IAnnotationModeState;
     aiImage: IAiImageState;
+    aiImageDialog: IAiImageDialogState;
     noteTagsIndex: Array<{ tag: string, index: number }>;
     img: IImageClickState; // TODO: replace by dock/dialog state
     dock: DockState;

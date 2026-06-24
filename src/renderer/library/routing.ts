@@ -13,6 +13,7 @@ import Catalog from "./components/catalog/Catalog";
 import Browser from "./components/opds/Browser";
 import Opds from "./components/opds/Opds";
 import AllPublicationPage from "./components/searchResult/AllPublicationPage";
+import CustomImagesManagePage from "./components/customImage/CustomImagesManagePage";
 // import TagSearchResult from "./components/searchResult/TagSearchResult";
 // import TextSearchResult from "./components/searchResult/TextSearchResult";
 
@@ -84,6 +85,10 @@ const _routes = {
         path: "/library",
         // exact: true,
         component: AllPublicationPage,
+    } as Route,
+    "/images": {
+        path: "/images",
+        component: CustomImagesManagePage,
     } as Route,
     "/home": {
         path: "/home",

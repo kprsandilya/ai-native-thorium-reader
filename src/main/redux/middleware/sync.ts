@@ -19,6 +19,7 @@ import {
     screenReaderActions,
     opdsActions,
     settingsActions,
+    customImageActions,
 } from "readium-desktop/common/redux/actions";
 import { ActionSerializer } from "readium-desktop/common/services/serializer";
 import { getLibraryWindowFromDi, getReaderWindowFromDi } from "readium-desktop/main/di";
@@ -81,6 +82,13 @@ const SYNCHRONIZABLE_ACTIONS: string[] = [
     // broadcast AI image generation status (pending/success/error) back to the
     // reader window that requested it.
     readerActions.aiImage.status.ID,
+
+    // standalone custom images (library landing page): broadcast results back to
+    // the library window(s).
+    customImageActions.add.ID,
+    customImageActions.status.ID,
+    customImageActions.remove.ID,
+    customImageActions.setList.ID,
 
     sessionActions.save.ID,
     screenReaderActions.save.ID,

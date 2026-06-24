@@ -80,6 +80,10 @@ export const convertDiffableReduxState = (nextState: Partial<PersistRootState>):
         settings,
         creator: nextState.creator,
         noteExport: nextState.noteExport,
+        // Persist only the durable list; drop transient generation status.
+        customImages: nextState.customImages
+            ? { list: nextState.customImages.list || [], status: {} }
+            : nextState.customImages,
         customization: {
             provision: [],
             lock: undefined,

@@ -293,8 +293,18 @@ export const AnnotationEdit: React.FC<IProps> = (props) => {
 
                         const textareaValue = textAreaRef?.current?.value || "";
                         const textareaNormalize = textareaValue.trim();
-                        save(hexToRgb(colorSelected), textareaNormalize, drawTypeSelected, tag ? [tag] : [], true);
                         saveConfig();
+                        // Close this popover and open the larger image-generation
+                        // dialog with the current draft (prompt defaults to the
+                        // highlighted text).
+                        dispatch(readerLocalActionAnnotations.aiImageDialogOpen.build({
+                            color: hexToRgb(colorSelected),
+                            drawType: drawTypeSelected,
+                            tags: tag ? [tag] : [],
+                            comment: textareaNormalize,
+                            prompt: selectionPreview,
+                            locatorExtended: locatorExtended,
+                        }));
                     }}
                 >
                     <SVG ariaHidden svg={PaletteIcon} />

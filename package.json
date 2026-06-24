@@ -29,6 +29,7 @@
     "clean": "rimraf dist && rimraf release",
     "ai-engine:dev": "cd ai-engine && uv run uvicorn main:app --host 127.0.0.1 --port 8000 --reload",
     "ai-engine:download": "cd ai-engine && uv run python download.py",
+    "ai-engine:benchmark": "python test/ai-benchmark/benchmark.py",
     "dev:all": "concurrently --kill-others --names \"thorium,ai-engine\" --prefix-colors \"cyan,magenta\" \"npm run start:dev\" \"npm run ai-engine:dev\"",
     "dev:integrated": "cross-env THORIUM_AI_ENGINE_AUTOSTART=1 npm run start:dev",
     "dev:all:quick": "concurrently --kill-others --names \"thorium,ai-engine\" --prefix-colors \"cyan,magenta\" \"npm run start:dev:quick\" \"npm run ai-engine:dev\"",

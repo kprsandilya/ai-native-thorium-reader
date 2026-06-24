@@ -500,6 +500,35 @@ declare namespace typed_i18n {
   (_: "header.settingsLabel", __?: {}): string;
   (_: "header.viewMode", __?: {}): string;
   (_: "library", __?: {}): {
+  readonly "customImage": {
+    readonly "create": {
+      readonly "error": string,
+      readonly "generate": string,
+      readonly "generating": string,
+      readonly "nav": string,
+      readonly "promptPlaceholder": string,
+      readonly "recent": string,
+      readonly "title": string
+    },
+    readonly "manage": {
+      readonly "allStyles": string,
+      readonly "copied": string,
+      readonly "copyPrompt": string,
+      readonly "delete": string,
+      readonly "empty": string,
+      readonly "nav": string,
+      readonly "next": string,
+      readonly "noMatch": string,
+      readonly "previous": string,
+      readonly "search": string,
+      readonly "sort": string,
+      readonly "sortNewest": string,
+      readonly "sortOldest": string,
+      readonly "sortPrompt": string,
+      readonly "title": string,
+      readonly "view": string
+    }
+  },
   readonly "filter": {
     readonly "addFilters": string,
     readonly "filterBy": string,
@@ -526,6 +555,85 @@ declare namespace typed_i18n {
     readonly "title": string
   }
 };
+  (_: "library.customImage", __?: {}): {
+  readonly "create": {
+    readonly "error": string,
+    readonly "generate": string,
+    readonly "generating": string,
+    readonly "nav": string,
+    readonly "promptPlaceholder": string,
+    readonly "recent": string,
+    readonly "title": string
+  },
+  readonly "manage": {
+    readonly "allStyles": string,
+    readonly "copied": string,
+    readonly "copyPrompt": string,
+    readonly "delete": string,
+    readonly "empty": string,
+    readonly "nav": string,
+    readonly "next": string,
+    readonly "noMatch": string,
+    readonly "previous": string,
+    readonly "search": string,
+    readonly "sort": string,
+    readonly "sortNewest": string,
+    readonly "sortOldest": string,
+    readonly "sortPrompt": string,
+    readonly "title": string,
+    readonly "view": string
+  }
+};
+  (_: "library.customImage.create", __?: {}): {
+  readonly "error": string,
+  readonly "generate": string,
+  readonly "generating": string,
+  readonly "nav": string,
+  readonly "promptPlaceholder": string,
+  readonly "recent": string,
+  readonly "title": string
+};
+  (_: "library.customImage.create.error", __?: {}): string;
+  (_: "library.customImage.create.generate", __?: {}): string;
+  (_: "library.customImage.create.generating", __?: {}): string;
+  (_: "library.customImage.create.nav", __?: {}): string;
+  (_: "library.customImage.create.promptPlaceholder", __?: {}): string;
+  (_: "library.customImage.create.recent", __?: {}): string;
+  (_: "library.customImage.create.title", __?: {}): string;
+  (_: "library.customImage.manage", __?: {}): {
+  readonly "allStyles": string,
+  readonly "copied": string,
+  readonly "copyPrompt": string,
+  readonly "delete": string,
+  readonly "empty": string,
+  readonly "nav": string,
+  readonly "next": string,
+  readonly "noMatch": string,
+  readonly "previous": string,
+  readonly "search": string,
+  readonly "sort": string,
+  readonly "sortNewest": string,
+  readonly "sortOldest": string,
+  readonly "sortPrompt": string,
+  readonly "title": string,
+  readonly "view": string
+};
+  (_: "library.customImage.manage.allStyles", __?: {}): string;
+  (_: "library.customImage.manage.copied", __?: {}): string;
+  (_: "library.customImage.manage.copyPrompt", __?: {}): string;
+  (_: "library.customImage.manage.delete", __?: {}): string;
+  (_: "library.customImage.manage.empty", __?: {}): string;
+  (_: "library.customImage.manage.nav", __?: {}): string;
+  (_: "library.customImage.manage.next", __?: {}): string;
+  (_: "library.customImage.manage.noMatch", __?: {}): string;
+  (_: "library.customImage.manage.previous", __?: {}): string;
+  (_: "library.customImage.manage.search", __?: {}): string;
+  (_: "library.customImage.manage.sort", __?: {}): string;
+  (_: "library.customImage.manage.sortNewest", __?: {}): string;
+  (_: "library.customImage.manage.sortOldest", __?: {}): string;
+  (_: "library.customImage.manage.sortPrompt", __?: {}): string;
+  (_: "library.customImage.manage.title", __?: {}): string;
+  (_: "library.customImage.manage.view", __?: {}): string;
   (_: "library.filter", __?: {}): {
   readonly "addFilters": string,
   readonly "filterBy": string,
@@ -1765,6 +1873,14 @@ declare namespace typed_i18n {
       readonly "none": string
     },
     readonly "generateImage": string,
+    readonly "generateImageDialog": {
+      readonly "negativePrompt": string,
+      readonly "negativePromptHelp": string,
+      readonly "negativePromptPlaceholder": string,
+      readonly "prompt": string,
+      readonly "style": string,
+      readonly "title": string
+    },
     readonly "hide": string,
     readonly "highlight": string,
     readonly "noGeneratedImages": string,
@@ -2020,6 +2136,14 @@ declare namespace typed_i18n {
     readonly "none": string
   },
   readonly "generateImage": string,
+  readonly "generateImageDialog": {
+    readonly "negativePrompt": string,
+    readonly "negativePromptHelp": string,
+    readonly "negativePromptPlaceholder": string,
+    readonly "prompt": string,
+    readonly "style": string,
+    readonly "title": string
+  },
   readonly "hide": string,
   readonly "highlight": string,
   readonly "noGeneratedImages": string,
@@ -2071,8 +2195,23 @@ declare namespace typed_i18n {
   (_: "reader.annotations.filter.filterOptions", __?: {}): string;
   (_: "reader.annotations.filter.none", __?: {}): string;
   (_: "reader.annotations.generateImage", __?: {}): string;
+  (_: "reader.annotations.generateImageDialog", __?: {}): {
+  readonly "negativePrompt": string,
+  readonly "negativePromptHelp": string,
+  readonly "negativePromptPlaceholder": string,
+  readonly "prompt": string,
+  readonly "style": string,
+  readonly "title": string
+};
+  (_: "reader.annotations.generateImageDialog.negativePrompt", __?: {}): string;
+  (_: "reader.annotations.generateImageDialog.negativePromptHelp", __?: {}): string;
+  (_: "reader.annotations.generateImageDialog.negativePromptPlaceholder", __?: {}): string;
+  (_: "reader.annotations.generateImageDialog.prompt", __?: {}): string;
+  (_: "reader.annotations.generateImageDialog.style", __?: {}): string;
+  (_: "reader.annotations.generateImageDialog.title", __?: {}): string;
   (_: "reader.annotations.hide", __?: {}): string;
   (_: "reader.annotations.highlight", __?: {}): string;
+  (_: "reader.annotations.noGeneratedImages", __?: {}): string;
   (_: "reader.annotations.noSelectionToast", __?: {}): string;
   (_: "reader.annotations.note", __?: {}): string;
   (_: "reader.annotations.quickAnnotations", __?: {}): string;
@@ -2143,6 +2282,7 @@ declare namespace typed_i18n {
   (_: "reader.marks.delete", __?: {}): string;
   (_: "reader.marks.edit", __?: {}): string;
   (_: "reader.marks.goTo", __?: {}): string;
+  (_: "reader.marks.images", __?: {}): string;
   (_: "reader.marks.landmarks", __?: {}): string;
   (_: "reader.marks.saveMark", __?: {}): string;
   (_: "reader.marks.search", __?: {}): string;
@@ -2566,9 +2706,24 @@ declare namespace typed_i18n {
     readonly "help": string,
     readonly "model": {
       readonly "fluxDevFp8": string,
+      readonly "fluxSchnell": string,
       readonly "sdTurbo": string
     },
     readonly "modelChoice": string,
+    readonly "style": {
+      readonly "anime": string,
+      readonly "comic": string,
+      readonly "digitalPainting": string,
+      readonly "fantasy": string,
+      readonly "none": string,
+      readonly "oil": string,
+      readonly "pencil": string,
+      readonly "photo": string,
+      readonly "pixel": string,
+      readonly "render3d": string,
+      readonly "vintage": string,
+      readonly "watercolor": string
+    },
     readonly "title": string
   },
   readonly "annotationCreator": {
@@ -2928,16 +3083,58 @@ declare namespace typed_i18n {
   readonly "help": string,
   readonly "model": {
     readonly "fluxDevFp8": string,
+    readonly "fluxSchnell": string,
     readonly "sdTurbo": string
   },
   readonly "modelChoice": string,
+  readonly "style": {
+    readonly "anime": string,
+    readonly "comic": string,
+    readonly "digitalPainting": string,
+    readonly "fantasy": string,
+    readonly "none": string,
+    readonly "oil": string,
+    readonly "pencil": string,
+    readonly "photo": string,
+    readonly "pixel": string,
+    readonly "render3d": string,
+    readonly "vintage": string,
+    readonly "watercolor": string
+  },
   readonly "title": string
 };
   (_: "settings.aiImage.help", __?: {}): string;
-  (_: "settings.aiImage.model", __?: {}): { readonly "fluxDevFp8": string, readonly "sdTurbo": string };
+  (_: "settings.aiImage.model", __?: {}): { readonly "fluxDevFp8": string, readonly "fluxSchnell": string, readonly "sdTurbo": string };
   (_: "settings.aiImage.model.fluxDevFp8", __?: {}): string;
+  (_: "settings.aiImage.model.fluxSchnell", __?: {}): string;
   (_: "settings.aiImage.model.sdTurbo", __?: {}): string;
   (_: "settings.aiImage.modelChoice", __?: {}): string;
+  (_: "settings.aiImage.style", __?: {}): {
+  readonly "anime": string,
+  readonly "comic": string,
+  readonly "digitalPainting": string,
+  readonly "fantasy": string,
+  readonly "none": string,
+  readonly "oil": string,
+  readonly "pencil": string,
+  readonly "photo": string,
+  readonly "pixel": string,
+  readonly "render3d": string,
+  readonly "vintage": string,
+  readonly "watercolor": string
+};
+  (_: "settings.aiImage.style.anime", __?: {}): string;
+  (_: "settings.aiImage.style.comic", __?: {}): string;
+  (_: "settings.aiImage.style.digitalPainting", __?: {}): string;
+  (_: "settings.aiImage.style.fantasy", __?: {}): string;
+  (_: "settings.aiImage.style.none", __?: {}): string;
+  (_: "settings.aiImage.style.oil", __?: {}): string;
+  (_: "settings.aiImage.style.pencil", __?: {}): string;
+  (_: "settings.aiImage.style.photo", __?: {}): string;
+  (_: "settings.aiImage.style.pixel", __?: {}): string;
+  (_: "settings.aiImage.style.render3d", __?: {}): string;
+  (_: "settings.aiImage.style.vintage", __?: {}): string;
+  (_: "settings.aiImage.style.watercolor", __?: {}): string;
   (_: "settings.aiImage.title", __?: {}): string;
   (_: "settings.annotationCreator", __?: {}): {
   readonly "creator": string,

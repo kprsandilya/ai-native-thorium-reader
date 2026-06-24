@@ -32,6 +32,7 @@ import * as noteExport from "./noteExport";
 import * as customizationActions from "./customization";
 import * as opdsActions from "./opds";
 import * as winCommonActions from "./win";
+import * as customImageActions from "./customImage";
 
 export {
     historyActions,
@@ -61,4 +62,5 @@ export {
     customizationActions,
     opdsActions,
     winCommonActions,
+    customImageActions,
 };

@@ -20,6 +20,7 @@ import { IDictWinSessionReaderState } from "./win/session/reader";
 import { ICommonRootState } from "readium-desktop/common/redux/states/commonRootState";
 import { IWizardState } from "readium-desktop/common/redux/states/wizard";
 import { ISettingsState } from "readium-desktop/common/redux/states/settings";
+import { ICustomImageState } from "readium-desktop/common/redux/states/renderer/customImage";
 
 export interface RootState extends ICommonRootState {
     app: AppState;
@@ -49,9 +50,10 @@ export interface RootState extends ICommonRootState {
     version: string;
     wizard: IWizardState;
     settings: ISettingsState;
+    customImages: ICustomImageState;
 }
 
-export type PersistRootState_ = Pick<RootState, "win" | "publication" | "reader" | "session" | "screenReader" | "i18n" | "opds" | "version" | "theme" | "wizard" | "settings" | "creator" | "noteExport" | "customization">;
+export type PersistRootState_ = Pick<RootState, "win" | "publication" | "reader" | "session" | "screenReader" | "i18n" | "opds" | "version" | "theme" | "wizard" | "settings" | "creator" | "noteExport" | "customization" | "customImages">;
 export type PersistRootState = Omit<PersistRootState_, "win"> & {
     win: {
         session: {

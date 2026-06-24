@@ -24,7 +24,7 @@ const debug = debug_(filename_);
 
 function* generateImage(action: readerActions.aiImage.request.TAction): SagaGenerator<void> {
 
-    const { note, prompt } = action.payload;
+    const { note, prompt, negativePrompt } = action.payload;
     const publicationIdentifier = action.destination.publicationIdentifier;
     const noteUuid = note.uuid;
 
@@ -36,7 +36,7 @@ function* generateImage(action: readerActions.aiImage.request.TAction): SagaGene
     const modelId = settingsAiImageModelId(diMainGet("store").getState().settings);
     debug(`Using AI model ${modelId} for note ${noteUuid}`);
 
-    const result = yield* callTyped(() => aiEngineGenerate({ prompt, model_id: modelId }));
+    const result = yield* callTyped(() => aiEngineGenerate({ prompt, negative_prompt: negativePrompt, model_id: modelId }));
 
     // Discriminated-union narrowing on `result.ok` is unreliable through the
     // typed-redux-saga `yield* call(...)` boundary, so extract each variant

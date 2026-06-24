@@ -252,7 +252,7 @@ function* noteRemove(action: readerActions.note.remove.TAction) {
     yield* putTyped(readerLocalActionHighlights.handler.pop.build([{ uuid: note.uuid }]));
 }
 
-function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage = false) {
+function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, comment: string, drawType: TDrawType, tags: string[], generateImage = false, imagePrompt?: string, negativePrompt?: string) {
 
     // clean __selection global variable state
     __selectionInfoGlobal.locatorExtended = undefined;
@@ -283,10 +283,12 @@ function* createAnnotation(locatorExtended: MiniLocatorExtended, color: IColor, 
     yield* putTyped(readerActions.bookmarkTotalCount.build(noteTotalCount + 1));
 
     if (generateImage) {
-        const prompt = locatorExtended.selectionInfo?.cleanText || "";
+        // Prefer the (styled) prompt edited in the dialog; fall back to the
+        // highlighted text when called from the legacy quick path.
+        const prompt = (imagePrompt && imagePrompt.trim()) || locatorExtended.selectionInfo?.cleanText || "";
         if (prompt) {
             debug(`Requesting AI image generation for note ${newNote.uuid}`);
-            yield* putTyped(readerActions.aiImage.request.build(publicationIdentifier, clone(newNote), prompt));
+            yield* putTyped(readerActions.aiImage.request.build(publicationIdentifier, clone(newNote), prompt, negativePrompt));
         }
     }
 
@@ -354,6 +356,28 @@ function* newLocatorEditAndSaveTheNote(locatorExtended: MiniLocatorExtended, fro
             keyboardFocusRequest(true);
         }, 200);
     }
+}
+
+function* generateImageForSelection(action: readerLocalActionAnnotations.generateImageForSelection.TAction) {
+
+    const { locatorExtended, color, drawType, tags, comment, prompt, negativePrompt } = action.payload;
+
+    if (!locatorExtended?.selectionInfo) {
+        debug("generateImageForSelection: no selection, abort");
+        yield* putTyped(
+            toastActions.openRequest.build(
+                ToastType.Error,
+                getTranslator().__("reader.annotations.noSelectionToast"),
+            ),
+        );
+        return;
+    }
+
+    debug(`generateImageForSelection: creating annotation + image for [${prompt?.slice(0, 30)}]`);
+    yield* callTyped(createAnnotation, locatorExtended, color, comment, drawType, tags, true, prompt, negativePrompt);
+
+    // The annotation popover (if still tracked) is no longer relevant.
+    yield* putTyped(readerLocalActionAnnotations.enableMode.build(false, undefined, undefined));
 }
 
 function* annotationButtonTrigger(action: readerLocalActionAnnotations.trigger.TAction) {
@@ -584,6 +608,11 @@ export const saga = () =>
             readerLocalActionAnnotations.trigger.ID,
             annotationButtonTrigger,
             (e) => console.error("readerLocalActionAnnotations.trigger", e),
+        ),
+        takeSpawnEvery(
+            readerLocalActionAnnotations.generateImageForSelection.ID,
+            generateImageForSelection,
+            (e) => console.error("readerLocalActionAnnotations.generateImageForSelection", e),
         ),
         spawnLeading(
             readerStart,

@@ -10,6 +10,9 @@ import * as trigger from "./trigger";
 import * as enableMode from "./enableMode";
 import * as createNote from "./createNote";
 import * as setLocator from "./setLocator";
+import * as aiImageDialogOpen from "./aiImageDialogOpen";
+import * as aiImageDialogClose from "./aiImageDialogClose";
+import * as generateImageForSelection from "./generateImageForSelection";
 
 export {
     focus,
@@ -17,4 +20,7 @@ export {
     enableMode,
     createNote,
     setLocator,
+    aiImageDialogOpen,
+    aiImageDialogClose,
+    generateImageForSelection,
 };

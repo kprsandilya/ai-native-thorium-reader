@@ -207,6 +207,35 @@
         "viewMode": "View mode"
     },
     "library": {
+        "customImage": {
+            "create": {
+                "error": "Generation failed",
+                "generate": "Generate",
+                "generating": "Generating image...",
+                "nav": "Create image",
+                "promptPlaceholder": "Describe the image you want to create...",
+                "recent": "Recent",
+                "title": "Create AI image"
+            },
+            "manage": {
+                "allStyles": "All styles",
+                "copied": "Copied",
+                "copyPrompt": "Copy prompt",
+                "delete": "Delete",
+                "empty": "No generated images yet. Use \"Create image\" to make one.",
+                "nav": "Gallery",
+                "next": "Next image",
+                "noMatch": "No images match the current filters.",
+                "previous": "Previous image",
+                "search": "Search prompts",
+                "sort": "Sort:",
+                "sortNewest": "Newest first",
+                "sortOldest": "Oldest first",
+                "sortPrompt": "Prompt (A-Z)",
+                "title": "Generated images",
+                "view": "View full size"
+            }
+        },
         "filter": {
             "addFilters": "Add filters",
             "filterBy": "Filter by",
@@ -716,6 +745,14 @@
             "hide": "Do not display",
             "highlight": "Highlight",
             "generateImage": "Generate image",
+            "generateImageDialog": {
+                "negativePrompt": "Negative prompt",
+                "negativePromptHelp": "Only applies to guided models such as FLUX.1-dev. SD-Turbo ignores negative prompts.",
+                "negativePromptPlaceholder": "e.g. blurry, low quality, text, watermark",
+                "prompt": "Prompt",
+                "style": "Art style",
+                "title": "Generate image from selection"
+            },
             "noGeneratedImages": "No generated images yet. Highlight text and use \"Generate image\" to create one.",
             "noSelectionToast": "No selection",
             "note": "{{- color}} Note",
@@ -1225,12 +1262,27 @@
             "languageChoice": "Language"
         },
         "aiImage": {
-            "help": "Choose which diffusion model generates images from highlight annotations. SD-Turbo is fast and works on most hardware. FLUX.1-dev (FP8) produces higher quality images but requires an NVIDIA GPU with enough VRAM and accepting the Hugging Face license.",
+            "help": "Choose which diffusion model generates images from highlight annotations. SD-Turbo is fast and works on most hardware. FLUX.1-schnell is ungated, higher quality, and needs no license. FLUX.1-dev (FP8) produces the best quality but requires an NVIDIA GPU with enough VRAM and accepting the Hugging Face license.",
             "model": {
-                "fluxDevFp8": "FLUX.1-dev FP8 (high quality, GPU)",
+                "fluxDevFp8": "FLUX.1-dev FP8 (best quality, GPU)",
+                "fluxSchnell": "FLUX.1-schnell (high quality, GPU)",
                 "sdTurbo": "SD-Turbo (default, fast)"
             },
             "modelChoice": "Image model",
+            "style": {
+                "anime": "Anime",
+                "comic": "Comic",
+                "digitalPainting": "Digital painting",
+                "fantasy": "Fantasy",
+                "none": "None",
+                "oil": "Oil painting",
+                "pencil": "Pencil sketch",
+                "photo": "Photorealistic",
+                "pixel": "Pixel art",
+                "render3d": "3D render",
+                "vintage": "Vintage",
+                "watercolor": "Watercolor"
+            },
             "title": "AI image generation"
         },
         "library": {

@@ -1,0 +1,3 @@
+# Benchmark run artifacts (stats, per-run detail, generated images).
+results/
+__pycache__/

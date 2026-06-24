@@ -211,6 +211,18 @@ export const publicationRepositoryPath = path.join(
 if (!fs.existsSync(publicationRepositoryPath)) {
     fs.mkdirSync(publicationRepositoryPath);
 }
+
+// Filesystem storage for standalone AI-generated images (not tied to any
+// publication). Served through the store:// protocol with the reserved
+// CUSTOM_IMAGE_STORE_PUBID sentinel (see src/main/sessions.ts).
+export const customImageRepositoryPath = path.join(
+    USER_DATA_FOLDER,
+    !FORCE_PROD_DB_IN_DEV && (__TH__IS_DEV__ || __TH__IS_CI__) ? "custom-images-dev" : "custom-images",
+);
+
+if (!fs.existsSync(customImageRepositoryPath)) {
+    fs.mkdirSync(customImageRepositoryPath);
+}
 //
 // end of create database
 //

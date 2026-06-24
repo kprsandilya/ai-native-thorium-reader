@@ -33,6 +33,7 @@ import { creatorReducer } from "readium-desktop/common/redux/reducers/creator";
 import { settingsReducer } from "readium-desktop/common/redux/reducers/settings";
 import { lcpReducer } from "readium-desktop/common/redux/reducers/lcp";
 import { noteExportReducer } from "readium-desktop/common/redux/reducers/noteExport";
+import { customImageReducer } from "readium-desktop/common/redux/reducers/customImage";
 import { customizationPackageActivatingReducer } from "readium-desktop/common/redux/reducers/customization/activate";
 import { customizationPackageProvisioningReducer } from "readium-desktop/common/redux/reducers/customization/provision";
 import { customizationPackageActivatingLockReducer } from "readium-desktop/common/redux/reducers/customization/lock";
@@ -156,6 +157,7 @@ export const rootReducer = combineReducers({ // RootState
     settings: settingsReducer,
     creator: creatorReducer,
     noteExport: noteExportReducer,
+    customImages: customImageReducer,
     customization: combineReducers({
         history: arrayReducer<customizationActions.addHistory.TAction, undefined, ICustomizationProfileHistory, Pick<ICustomizationProfileHistory, "id">>(
                 {

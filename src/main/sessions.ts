@@ -13,7 +13,8 @@ import { net, session } from "electron";
 import { tryDecodeURIComponent } from "readium-desktop/common/utils/uri";
 import { pathToFileURL } from "url";
 import * as path from "path";
-import { diMainGet } from "readium-desktop/main/di";
+import { customImageRepositoryPath, diMainGet } from "readium-desktop/main/di";
+import { CUSTOM_IMAGE_STORE_PUBID } from "readium-desktop/common/redux/states/renderer/customImage";
 
 // const debug = (..._: any[]) => {};
 const debug =  debug_("readium-desktop:main#sessions");
@@ -221,10 +222,16 @@ export const initProtocols = () => {
     debug(urlPath);
     // const urlPathDecoded = tryDecodeURIComponent(urlPath);
     // debug(urlPathDecoded);
-    const pubStorage = diMainGet("publication-storage");
     const [pubId, fileName] = urlPath.trim().split("/");
-    const pubPath = await pubStorage.getPublicationPath(pubId);
-    const filePath = path.join(pubPath, fileName);
+    let filePath: string;
+    if (pubId === CUSTOM_IMAGE_STORE_PUBID) {
+      // Standalone custom images live in their own app-data folder.
+      filePath = path.join(customImageRepositoryPath, fileName);
+    } else {
+      const pubStorage = diMainGet("publication-storage");
+      const pubPath = await pubStorage.getPublicationPath(pubId);
+      filePath = path.join(pubPath, fileName);
+    }
     debug(filePath);
     const filePathUrl = pathToFileURL(filePath).toString();
     debug(filePathUrl);

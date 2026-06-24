@@ -36,6 +36,7 @@ import * as lcp from "./lcp";
 import * as catalog from "./catalog";
 import * as annotation from "./note";
 import * as aiImage from "./ai/generateImage";
+import * as customImage from "./ai/generateCustomImage";
 import * as customization from "./customization";
 import * as lcpSharedWorkstationCleanup from "./publication/lcpSharedWorkstationCleanup";
 
@@ -143,6 +144,9 @@ export function* rootSaga() {
 
     // AI image generation saga (proxies highlight text to the local Python engine)
     yield aiImage.saga();
+
+    // Standalone custom AI image generation + management saga (library landing page)
+    yield customImage.saga();
 
     // get/set catalog in library win
     yield catalog.saga();

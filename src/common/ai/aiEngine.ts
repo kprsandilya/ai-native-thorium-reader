@@ -19,17 +19,24 @@ export const AI_ENGINE_BASE_URL = "http://127.0.0.1:8000";
 /** Fast default model; works on CPU and modest GPUs. */
 export const DEFAULT_AI_IMAGE_MODEL_ID = "stabilityai/sd-turbo";
 
+/** Higher-quality, ungated model; lighter than FLUX.1-dev and a big step up from SD-Turbo. */
+export const FLUX_SCHNELL_AI_IMAGE_MODEL_ID = "black-forest-labs/FLUX.1-schnell";
+
 /** High-quality opt-in model; needs a CUDA GPU with enough VRAM and HF license acceptance. */
 export const FLUX_AI_IMAGE_MODEL_ID = "black-forest-labs/FLUX.1-dev-FP8";
 
 export interface IAiImageModelOption {
     id: string;
     /** Stable key used to look up a localized label in settings. */
-    labelKey: "settings.aiImage.model.sdTurbo" | "settings.aiImage.model.fluxDevFp8";
+    labelKey:
+        | "settings.aiImage.model.sdTurbo"
+        | "settings.aiImage.model.fluxSchnell"
+        | "settings.aiImage.model.fluxDevFp8";
 }
 
 export const AI_IMAGE_MODEL_OPTIONS: IAiImageModelOption[] = [
     { id: DEFAULT_AI_IMAGE_MODEL_ID, labelKey: "settings.aiImage.model.sdTurbo" },
+    { id: FLUX_SCHNELL_AI_IMAGE_MODEL_ID, labelKey: "settings.aiImage.model.fluxSchnell" },
     { id: FLUX_AI_IMAGE_MODEL_ID, labelKey: "settings.aiImage.model.fluxDevFp8" },
 ];
 
@@ -43,6 +50,9 @@ export function resolveAiImageModelId(modelId: string | undefined): string {
 
 export interface IAiGenerateRequest {
     prompt: string;
+    // Things to avoid in the image. Only effective on models that use
+    // classifier-free guidance (e.g. FLUX.1-dev); ignored by SD-Turbo.
+    negative_prompt?: string;
     model_id?: string;
     num_inference_steps?: number;
     seed?: number;

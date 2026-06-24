@@ -15,6 +15,7 @@ import {
     screenReaderActions,
     opdsActions,
     winCommonActions,
+    customImageActions,
 } from "readium-desktop/common/redux/actions";
 import { syncFactory } from "readium-desktop/renderer/common/redux/middleware/syncFactory";
 
@@ -87,6 +88,11 @@ const SYNCHRONIZABLE_ACTIONS: string[] = [
     authActions.logout.ID,
 
     opdsActions.refresh.ID,
+
+    // standalone custom images (library landing page) -> main
+    customImageActions.generateRequest.ID,
+    customImageActions.remove.ID,
+    customImageActions.pull.ID,
 
     winCommonActions.initSuccess.ID,
     

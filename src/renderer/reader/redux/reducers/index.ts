@@ -60,6 +60,7 @@ import { customizationPackageWelcomeScreenReducer } from "readium-desktop/common
 import { ICustomizationManifest } from "readium-desktop/common/readium/customization/manifest";
 import { readerPdfConfigReducer } from "readium-desktop/common/redux/reducers/reader/pdfConfig";
 import { aiImageReducer } from "./aiImage";
+import { aiImageDialogReducer } from "./aiImageDialog";
 
 export const rootReducer = () => {
 
@@ -163,6 +164,7 @@ export const rootReducer = () => {
         search: searchReducer,
         annotation: annotationModeEnableReducer,
         aiImage: aiImageReducer,
+        aiImageDialog: aiImageDialogReducer,
         noteTagsIndex: arrayReducer<readerActions.note.addUpdate.TAction | readerActions.note.remove.TAction, undefined, { tag: string, index: number }, { tag: string }>(
             {
                 add: [
